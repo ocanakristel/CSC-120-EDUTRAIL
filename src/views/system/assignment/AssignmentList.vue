@@ -115,8 +115,21 @@ const finishedAssignments = computed(() =>
 </script>
 
 <template>
-  <v-container fluid class="background" style="min-height: 100vh">
-    <v-card class="pa-4 header-card" flat>
+  <v-container
+  fluid
+  class="background"
+  style="min-height: 100vh; background: #e8fcd9;"
+>
+
+    <v-card
+  class="pa-4 header-card"
+  flat
+  style="
+    background: linear-gradient(120deg, #7ee8fa 0%, #80ff72 50%, #fff07c 100%);
+    border-radius: 20px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
+  "
+>
       <v-row align="center" justify="space-between" no-gutters>
         <v-col cols="12" md="8">
           <div class="header-title mb-3">Stay on Track</div>
@@ -368,7 +381,7 @@ const finishedAssignments = computed(() =>
 
 <style scoped>
 .background {
-  background: #e8fcd9; /* same soft pastel green */
+  background: #e8fcd9; 
   min-height: 100vh;
   padding: 24px;
 }
@@ -379,7 +392,7 @@ const finishedAssignments = computed(() =>
   border-radius: 20px;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
   margin-bottom: 24px;
-  color: #ffffff;
+  color: #0e0d0d;
 }
 
 .header-title {
