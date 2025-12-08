@@ -305,7 +305,7 @@ const goToReports = () => {
                           </div>
                         </div>
 
-                        <v-chip size="small" color="orange" label>Soon</v-chip>
+                        <v-chip size="small" color="yellow" label>Soon</v-chip>
                       </div>
                     </div>
                   </div>
