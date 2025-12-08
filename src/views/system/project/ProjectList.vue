@@ -335,7 +335,7 @@ const onChecklistChange = async (project, idx, val) => {
 
 /* "STAY ON TRACK" HEADER CARD FOR PROJECTS */
 .header-card {
-  background: linear-gradient(120deg, #7ee8fa 0%, #80ff72 50%, #fff07c 100%);
+  background: #0E7f21;
   border-radius: 20px;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
   margin-bottom: 24px;
@@ -343,7 +343,7 @@ const onChecklistChange = async (project, idx, val) => {
 }
 
 .header-title {
-  color: #0b0b0b;
+  color: #eeeaea;
   font-weight: 700;
   font-size: 2rem;
   letter-spacing: -0.5px;
@@ -355,7 +355,7 @@ const onChecklistChange = async (project, idx, val) => {
 }
 
 .custom-tab {
-  color: rgba(8, 8, 8, 0.92) !important;
+  color: rgba(249, 243, 243, 0.92) !important;
   font-weight: 600;
   font-size: 0.9rem;
   text-transform: none;
@@ -364,7 +364,7 @@ const onChecklistChange = async (project, idx, val) => {
 }
 
 .custom-tab.v-tab--selected {
-  color: #358600 !important;
+  color: #E3E85A !important;
   border-bottom: 3px solid #358600;
   border-radius: 0;
 }
@@ -382,7 +382,7 @@ const onChecklistChange = async (project, idx, val) => {
 /* CREATE PROJECT BUTTON */
 .create-btn {
   background: #fff07c !important;
-  color: #358600 !important;
+  color: #030303 !important;
   font-weight: 700;
   padding: 0 24px !important;
   border-radius: 10px;

@@ -449,16 +449,16 @@ const goToReports = () => {
   padding-block: 24px;
 }
 .welcome-banner {
-  background: linear-gradient(90deg, #7ee8fa 0%, #80ff72 50%, #7fff8a 100%);
+  background-color: #188221;
   color: #23311e;
   padding: 32px;
   border-radius: 16px;
 }
 .welcome-banner .text-primary {
-  color: #23311e !important;
+  color: #e7ece5 !important;
 }
 .welcome-banner .text-muted {
-  color: #355b34 !important;
+  color: #e7ebe6 !important;
 }
 .stats-card,
 .content-card,
@@ -471,10 +471,10 @@ const goToReports = () => {
 .deadline-item {
   padding: 8px;
   border-radius: 8px;
-  background: rgba(166, 210, 200, 0.25);
+  background: rgba(11, 11, 11, 0.25);
 }
 .text-muted {
-  color: #4b7368;
+  color: #060606;
 }
 .v-btn[color='primary'] {
   background-color: #6ea89e !important;
@@ -483,11 +483,11 @@ const goToReports = () => {
 .v-btn[color='deep-orange'],
 .v-btn[color='orange'] {
   background-color: #cfe5d5 !important;
-  color: #254741 !important;
+  color: #080808 !important;
 }
 .v-btn[color='info'] {
   background-color: #a6d2c8 !important;
-  color: #254741 !important;
+  color: #121212 !important;
   border: 1px solid #6ea89e !important;
 }
 .v-btn[color='success'] {

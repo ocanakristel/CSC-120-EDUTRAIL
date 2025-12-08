@@ -9,8 +9,6 @@ import SubjectView from '@/views/system/subject/SubjectView.vue'
 import AssignmentView from '@/views/system/assignment/AssignmentView.vue'
 import ProjectView from '@/views/system/project/ProjectView.vue'
 import AccountSettingsView from '@/views/system/AccountSettingsView.vue'
-
-// ⭐ NEW IMPORTS
 import CalendarView from '@/views/system/CalendarView.vue'
 import ReportsView from '@/views/system/ReportsView.vue'
 

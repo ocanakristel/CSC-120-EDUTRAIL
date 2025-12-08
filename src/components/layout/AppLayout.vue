@@ -74,7 +74,7 @@ onMounted(() => {
 
 <style scoped>
 .pastel-top-bar {
-  background-color: #fff07c !important; /* yellow */
+  background-color: #4CAF50;
   color: #28361f !important;
   border-bottom: 1px solid rgba(40, 54, 31, 0.15);
 }
@@ -86,7 +86,7 @@ onMounted(() => {
 
 /* Footer */
 .pastel-footer {
-  background-color: #fff07c !important;
+  background-color: #4CAF50 !important;
   color: #28361f !important;
   border-top: 1px solid rgba(40, 54, 31, 0.15);
 }
@@ -106,6 +106,6 @@ onMounted(() => {
 }
 
 .logo-highlight {
-  color: #7ee8fa; /* blue accent */
+  color: #fcfcfa; 
 }
 </style>

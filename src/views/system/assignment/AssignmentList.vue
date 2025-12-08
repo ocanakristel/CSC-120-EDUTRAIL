@@ -125,7 +125,7 @@ const finishedAssignments = computed(() =>
   class="pa-4 header-card"
   flat
   style="
-    background: linear-gradient(120deg, #7ee8fa 0%, #80ff72 50%, #fff07c 100%);
+    background: #0E7F21;
     border-radius: 20px;
     box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
   "
@@ -388,7 +388,7 @@ const finishedAssignments = computed(() =>
 
 /* "STAY ON TRACK" HEADER CARD – MATCH DASHBOARD / PROJECTS */
 .header-card {
-  background: linear-gradient(120deg, #7ee8fa 0%, #80ff72 50%, #fff07c 100%);
+ background-color: #3b973c;
   border-radius: 20px;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
   margin-bottom: 24px;
@@ -396,7 +396,7 @@ const finishedAssignments = computed(() =>
 }
 
 .header-title {
-  color: #ffffff;
+  color: #efefef;
   font-weight: 700;
   font-size: 2rem;
   letter-spacing: -0.5px;
@@ -408,7 +408,7 @@ const finishedAssignments = computed(() =>
 }
 
 .custom-tab {
-  color: rgba(255, 255, 255, 0.92) !important;
+  color: rgba(245, 244, 244, 0.92) !important;
   font-weight: 600;
   font-size: 0.9rem;
   text-transform: none;
@@ -417,7 +417,7 @@ const finishedAssignments = computed(() =>
 }
 
 .custom-tab.v-tab--selected {
-  color: #358600 !important;
+  color: #E3E85A !important;
   border-bottom: 3px solid #358600;
   border-radius: 0;
 }
@@ -434,8 +434,8 @@ const finishedAssignments = computed(() =>
 
 /* + CREATE ASSIGNMENT button */
 .create-btn {
-  background: #fff07c !important;
-  color: #358600 !important;
+  background: #dfdf54 !important;
+  color: #040404 !important;
   font-weight: 700;
   padding: 0 24px !important;
   border-radius: 10px;
@@ -445,7 +445,7 @@ const finishedAssignments = computed(() =>
 }
 
 .create-btn:hover {
-  background: #ffe98f !important;
+  background: #fcfcfb !important;
   transform: translateY(-2px);
 }
 

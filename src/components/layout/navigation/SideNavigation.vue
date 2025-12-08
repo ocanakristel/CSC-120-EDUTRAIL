@@ -25,7 +25,7 @@ const handleLogout = async () => {
   try {
     await supabase.auth.signOut()
     authStore.$reset()
-    router.push('/')              // ✅ go to login homepage
+    router.push('/')              
   } catch (err) {
     console.error('Error logging out:', err)
   }
@@ -84,7 +84,7 @@ const handleLogout = async () => {
 <style scoped>
 /* Entire Sidebar Background */
 .side-nav {
-  background: #fff7bd !important;
+ background-color: #3b973e !important;
   color: #333333 !important;
   border-right: 1px solid rgba(0, 0, 0, 0.05);
   backdrop-filter: blur(8px);
@@ -92,7 +92,7 @@ const handleLogout = async () => {
 
 /* Menu section titles */
 .section-title {
-  color: #555555 !important;
+  color: #0c0c0c !important;
   font-weight: 600;
   font-size: 0.9rem;
   margin-bottom: 6px;
@@ -100,7 +100,7 @@ const handleLogout = async () => {
 
 /* List items */
 .v-list-item {
-  color: #333333 !important;
+  color: #0a0a0a !important;
   border-radius: 10px;
   margin: 4px 8px;
   transition: 0.25s ease;
@@ -108,12 +108,12 @@ const handleLogout = async () => {
 
 /* Hover effect */
 .v-list-item:hover {
-  background-color: rgba(255, 240, 124, 0.35) !important;
+  background-color: #d1e55f !important;
 }
 
 /* Active (selected) menu item */
 .v-list-item--active {
-  background-color: rgba(255, 240, 124, 0.55) !important;
+  background-color: #f6f7f2 !important;
   color: #23311e !important;
   font-weight: 700 !important;
 }
