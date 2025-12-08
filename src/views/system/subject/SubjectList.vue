@@ -106,7 +106,7 @@ onMounted(async () => {
         md="4"
         lg="3"
       >
-        <v-card class="ma-3 pa-4" min-height="250" min-width="225" color="blue">
+        <v-card class="ma-3 pa-4" min-height="250" min-width="225" color="green">
           <!-- Image -->
           <v-img v-if="subject.image_url" :src="subject.image_url" height="150" cover></v-img>
 

@@ -25,47 +25,142 @@ const isDrawerVisible = ref(true)
 </template>
 
 <style scoped>
-/* Gradient background */
-.gradient-bg {
-  background: linear-gradient(135deg, #1e3c72, #2a5298);
+/* Background of the whole page – same gradient as dashboard */
+.background {
+  background: #f8f8f8(
+    120deg,
+    #fff07c 0%,
+    #80ff72 25%,
+    #7ee8fa 60%,
+    #eec0c6 100%
+  );
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  padding: 24px;
 }
 
-/* Container styling */
-.container {
-  position: relative;
-  padding: 20px;
+/* HEADER: same as dashboard "Good Afternoon" */
+.header-card {
+  background: linear-gradient(135deg, #7ee8fa 0%, #80ff72 100%);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+  color: #ffffff;
 }
 
-/* Button positioning */
-.menu-btn {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  z-index: 10;
+.header-title {
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 2rem;
+  letter-spacing: -0.5px;
 }
-.auth-background {
-  background: linear-gradient(140deg, #0a0a0b, #1ea8b0);
-  /* background-image: url('@/assets/img/bg.jpg'); */
-  background-size: cover;
-  background-position: center;
+
+/* Tabs inside header */
+.custom-tabs {
+  background: transparent;
+}
+
+.custom-tab {
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: none;
+  padding: 0 24px;
+  min-height: 48px;
+}
+
+.custom-tab.v-tab--selected {
+  color: #fff07c !important;
+  border-bottom: 3px solid #fff07c;
+  border-radius: 0;
+}
+
+.tab-label {
+  font-weight: 600;
+}
+
+.tab-chip {
+  font-weight: 700;
+  min-width: 32px;
+  height: 24px;
+}
+
+/* Create Project button */
+.create-btn {
+  background: #fff07c !important;
+  color: #358600 !important;
+  font-weight: 700;
+  padding: 0 24px !important;
+  border-radius: 10px;
+  text-transform: none;
+  font-size: 0.95rem;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.create-btn:hover {
+  background: #ffe95a !important;
+  transform: translateY(-2px);
+}
+
+/* PROJECT CARDS */
+.modern-project-card {
+  border-radius: 14px;
+  background: #ffffff !important;
+  color: #1a1a1a;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #dcdcdc;
+}
+
+.modern-project-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+}
+
+.project-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #358600;
+  line-height: 1.3;
+}
+
+.text-muted {
+  color: #757575;
+}
+
+.no-checklist-msg {
   display: flex;
-  justify-content: center;
   align-items: center;
-  padding: 20px;
+  padding: 10px 14px;
+  background: #fff3e0;
+  border-radius: 8px;
+  border-left: 4px solid #ff9800;
 }
-.toggle-btn {
-  background-color: rgba(0, 0, 0, 0.2);
-  color: white;
+
+.checklist-section {
+  background: #f8f9fa;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #e0e0e0;
 }
-.tabs-head {
-  color: white;
-  font-family: 'Poppins', sans-serif;
+
+.finished-checklist {
+  background: #f1f8f4;
+  border: 1px solid #c8e6c9;
 }
-.custom-border {
-  border: 2px solid #0097a7; /* Adjust color as needed */
-  border-radius: 8px; /* Optional: Adds rounded corners */
+
+.progress-section {
+  background: #fafafa;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #eeeeee;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.detail-item:last-child {
+  margin-bottom: 0;
 }
 </style>

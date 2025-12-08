@@ -31,33 +31,42 @@ const formAction = ref({ ...formActionDefault })
 
 // Register functionality
 const onSubmit = async () => {
-  //Reset form action utils
+  // Reset form action utils
   formAction.value = { ...formActionDefault }
-  // Turn on proccessing
+  // Turn on processing
   formAction.value.formProcess = true
 
-  const { data, error } = await supabase.auth.signUp({
-    email: formData.value.email,
-    password: formData.value.password,
-    options: {
-      data: {
-        firstname: formData.value.firstname,
-        lastname: formData.value.lastname,
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email: formData.value.email,
+      password: formData.value.password,
+      options: {
+        data: {
+          firstname: formData.value.firstname,
+          lastname: formData.value.lastname,
+        },
       },
-    },
-  })
+    })
 
-  if (error) {
-    //Add Error Message
-    formAction.value.formErrorMessage = error.message
-    formAction.value.formStatus = error.status
-  } else if (data) {
-    //Add Succeess Message
-    formAction.value.formSuccessMessage = 'Successfully Registered'
-    //Redirect to Dashboard
-    router.replace('/system/dashboard')
+    if (error) {
+      // Add Error Message
+      formAction.value.formErrorMessage = error.message
+      formAction.value.formStatus = error.status
+    } else if (data) {
+      // Add Success Message
+      formAction.value.formSuccessMessage =
+        'Successfully registered. Please log in with your new account.'
+
+      // ⬅️ IMPORTANT:
+      // Go back to LOGIN so the user logs in as the NEW account
+      router.replace('/')
+    }
+  } catch (err) {
+    formAction.value.formErrorMessage = 'Unexpected error during registration.'
+    console.error(err)
   }
-  //Reset form
+
+  // Reset form
   refVForm.value?.reset()
   // Turn off processing
   formAction.value.formProcess = false
@@ -77,7 +86,7 @@ const visible = ref(false) // Default visibility for passwords
 </script>
 
 <template>
-  <!-- Success Alert -->
+  <!-- Success / Error Alert -->
   <AlertNotification
     :form-success-message="formAction.formSuccessMessage"
     :form-error-message="formAction.formErrorMessage"
@@ -96,7 +105,7 @@ const visible = ref(false) // Default visibility for passwords
           label="Firstname"
           variant="outlined"
           :rules="[requiredValidator]"
-        ></v-text-field>
+        />
       </v-col>
 
       <!-- Last Name Field -->
@@ -108,7 +117,7 @@ const visible = ref(false) // Default visibility for passwords
           label="Lastname"
           variant="outlined"
           :rules="[requiredValidator]"
-        ></v-text-field>
+        />
       </v-col>
     </v-row>
 
@@ -122,7 +131,7 @@ const visible = ref(false) // Default visibility for passwords
       prepend-inner-icon="mdi-email-outline"
       variant="outlined"
       :rules="[requiredValidator, emailValidator]"
-    ></v-text-field>
+    />
 
     <v-row>
       <v-col cols="6">
@@ -139,7 +148,7 @@ const visible = ref(false) // Default visibility for passwords
           variant="outlined"
           @click:append-inner="visible = !visible"
           :rules="[requiredValidator, passwordValidator]"
-        ></v-text-field>
+        />
       </v-col>
 
       <v-col cols="6">
@@ -159,7 +168,7 @@ const visible = ref(false) // Default visibility for passwords
             requiredValidator,
             confirmedValidator(formData.confirmed_password, formData.password),
           ]"
-        ></v-text-field>
+        />
       </v-col>
     </v-row>
 
@@ -167,7 +176,6 @@ const visible = ref(false) // Default visibility for passwords
     <v-btn
       type="submit"
       class="csu-register-btn mb-4"
-      color="blue"
       size="large"
       block
       :disabled="formAction.formProcess"
@@ -177,6 +185,7 @@ const visible = ref(false) // Default visibility for passwords
     </v-btn>
   </v-form>
 </template>
+
 <style scoped>
 .csu-register-btn {
   background-color: #006400 !important;
@@ -191,6 +200,7 @@ const visible = ref(false) // Default visibility for passwords
 }
 .csu-register-btn:hover,
 .csu-register-btn:focus {
-  background-color: #034d15 !important; /* darken on hover/focus */
+  background-color: #034d15 !important; 
 }
 </style>
+

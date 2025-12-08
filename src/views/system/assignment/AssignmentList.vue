@@ -1,16 +1,35 @@
 <script setup>
 import { onMounted, ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { supabase } from '@/utils/supabase'
 import { useAssignmentsStore } from '@/stores/assignments'
 import AssignmentFormDialog from './AssignmentFormDialog.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 
+const router = useRouter()
 const assignmentsStore = useAssignmentsStore()
+
 const tab = ref('one')
 
 const itemData = ref(null)
 const isDialogVisible = ref(false)
 const deleteId = ref(null)
 const isConfirmDeleteDialog = ref(false)
+
+// current logged-in user id
+const currentUserId = ref(null)
+
+// simple date formatter (optional but nicer)
+const formatDate = (dateString) => {
+  if (!dateString) return '—'
+  const d = new Date(dateString)
+  if (Number.isNaN(d.getTime())) return dateString
+  return d.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
+}
 
 const onAdd = () => {
   itemData.value = null
@@ -38,9 +57,22 @@ const onConfirmDelete = async () => {
   }
 }
 
+// 🔥 ALWAYS refetch for the current user
 onMounted(async () => {
-  if (assignmentsStore.assignments.length === 0) {
+  try {
+    const { data, error } = await supabase.auth.getUser()
+    if (error || !data?.user) {
+      console.error('No logged-in user, redirecting to login...', error?.message)
+      router.replace('/')
+      return
+    }
+
+    currentUserId.value = data.user.id
+
+    // refresh assignments (will be filtered below in computed)
     await assignmentsStore.getAssignments()
+  } catch (err) {
+    console.error('Error loading assignments:', err.message)
   }
 })
 
@@ -65,11 +97,20 @@ const onChecklistChange = async (assignment, idx, val) => {
     checklist: assignment.checklist,
   })
 }
+
+// ✅ filter by user_id first
+const userAssignments = computed(() =>
+  assignmentsStore.assignments.filter(
+    (a) => !currentUserId.value || a.user_id === currentUserId.value,
+  ),
+)
+
+// then split into active / finished
 const activeAssignments = computed(() =>
-  assignmentsStore.assignments.filter((a) => a.status !== 'finished'),
+  userAssignments.value.filter((a) => a.status !== 'finished'),
 )
 const finishedAssignments = computed(() =>
-  assignmentsStore.assignments.filter((a) => a.status === 'finished'),
+  userAssignments.value.filter((a) => a.status === 'finished'),
 )
 </script>
 
@@ -181,7 +222,7 @@ const finishedAssignments = computed(() =>
                   <div class="detail-item">
                     <v-icon size="small" color="grey-darken-1">mdi-calendar-clock</v-icon>
                     <span class="text-caption ml-2"
-                      ><strong>Due:</strong> {{ assignment.due_date }} at
+                      ><strong>Due:</strong> {{ formatDate(assignment.due_date) }} at
                       {{ assignment.due_time }}</span
                     >
                   </div>
@@ -219,6 +260,7 @@ const finishedAssignments = computed(() =>
           </v-col>
         </v-row>
       </v-tabs-window-item>
+
       <v-tabs-window-item value="two">
         <v-row :justify="finishedAssignments.length === 1 ? 'center' : 'start'">
           <v-col
@@ -286,7 +328,7 @@ const finishedAssignments = computed(() =>
                   <div class="detail-item">
                     <v-icon size="small" color="grey-darken-1">mdi-calendar-check</v-icon>
                     <span class="text-caption ml-2"
-                      ><strong>Completed:</strong> {{ assignment.due_date }}</span
+                      ><strong>Completed:</strong> {{ formatDate(assignment.due_date) }}</span
                     >
                   </div>
                 </div>
@@ -326,138 +368,9 @@ const finishedAssignments = computed(() =>
 
 <style scoped>
 .background {
-  background: linear-gradient(90deg, #0b6623 0%, #1aae6f 100%);
+  background: #e8fcd9; 
   min-height: 100vh;
   padding: 24px;
 }
-.header-card {
-  background: #004d25;
-  border-radius: 0;
-  box-shadow: none;
-  margin-bottom: 24px;
-  color: #fcd116;
-}
-.header-title {
-  color: #fcd116;
-  font-weight: 700;
-  font-size: 2rem;
-  letter-spacing: -0.5px;
-}
-.custom-tabs {
-  background: transparent;
-}
-.custom-tab {
-  color: rgba(255, 255, 255, 0.9) !important;
-  font-weight: 600;
-  font-size: 0.9rem;
-  text-transform: none;
-  padding: 0 24px;
-  min-height: 48px;
-}
-.custom-tab.v-tab--selected {
-  color: #fcd116 !important;
-  border-bottom: 3px solid #fcd116;
-  border-radius: 0;
-}
-.tab-label {
-  font-weight: 600;
-}
-.tab-chip {
-  font-weight: 700;
-  min-width: 32px;
-  height: 24px;
-}
-.create-btn {
-  background: #fcd116 !important;
-  color: #004d25 !important;
-  font-weight: 700;
-  padding: 0 24px !important;
-  border-radius: 10px;
-  text-transform: none;
-  font-size: 0.95rem;
-}
-.create-btn:hover {
-  background: #ffde42 !important;
-  transform: translateY(-2px);
-}
-.modern-assignment-card {
-  border-radius: 14px;
-  background: #f5fbf7 !important;
-  color: #1a1a1a;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border: 1px solid #dcdcdc;
-}
-.modern-assignment-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
-}
-.finished-card {
-  background: #f1f8f4 !important;
-  border: 1px solid #c8e6c9 !important;
-}
-.assignment-title {
-  font-size: 1.15rem;
-  font-weight: 600;
-  color: #004d25;
-  line-height: 1.3;
-}
-.text-muted {
-  color: #757575;
-}
-.no-checklist-msg {
-  display: flex;
-  align-items: center;
-  padding: 10px 14px;
-  background: #fff3e0;
-  border-radius: 8px;
-  border-left: 4px solid #ff9800;
-}
-.checklist-section {
-  background: #f8f9fa;
-  padding: 12px;
-  border-radius: 10px;
-  border: 1px solid #e0e0e0;
-}
-.finished-checklist {
-  background: #f1f8f4;
-  border: 1px solid #c8e6c9;
-}
-.progress-section {
-  background: #fafafa;
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid #e0e0e0;
-}
-.progress-percent {
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: #004d25;
-}
-.v-btn.primary {
-  background-color: #fcd116 !important;
-  color: #004d25 !important;
-}
-.v-btn.success {
-  background-color: #004d25 !important;
-  color: #ffffff !important;
-}
-.v-btn.error {
-  background-color: #c62828 !important;
-  color: #ffffff !important;
-}
-@media (max-width: 960px) {
-  .header-title {
-    font-size: 1.5rem;
-  }
-  .custom-tab {
-    font-size: 0.8rem;
-    padding: 0 12px;
-  }
-  .create-btn {
-    width: 100%;
-  }
-}
-.gap-2 {
-  gap: 8px;
-}
 </style>
+

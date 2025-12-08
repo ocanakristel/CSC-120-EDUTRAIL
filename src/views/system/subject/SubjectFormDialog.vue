@@ -1,35 +1,27 @@
 <script setup>
 import AlertNotification from '@/components/common/AlertNotification.vue'
-import { requiredValidator } from '@/utils/validators'
+import { requiredValidator, imageValidator } from '@/utils/validators'
 import { formActionDefault } from '@/utils/supabase.js'
-import { useSubjectsStore } from '@/stores/subjects' // Use the subjects store
+import { useSubjectsStore } from '@/stores/subjects'
 import { fileExtract } from '@/utils/helpers'
 import { useDisplay } from 'vuetify'
 import { ref, watch } from 'vue'
-import { imageValidator } from '@/utils/validators'
+import { logSecurityEvent } from '@/utils/securityLogs' // 📝 logging
 
 const props = defineProps(['isDialogVisible', 'itemData', 'tableFilters'])
 const emit = defineEmits(['update:isDialogVisible'])
 
-// Utilize pre-defined Vue functions
 const { mdAndDown } = useDisplay()
-
-// Use Pinia Store
 const subjectsStore = useSubjectsStore()
 
-// Load Variables
 const formDataDefault = {
   name: '',
   units: '0',
   description: '',
   image: null,
 }
-const formData = ref({
-  ...formDataDefault,
-})
-const formAction = ref({
-  ...formActionDefault,
-})
+const formData = ref({ ...formDataDefault })
+const formAction = ref({ ...formActionDefault })
 const refVForm = ref()
 const isUpdate = ref(false)
 const imgPreview = ref('/images/img-product.png')
@@ -38,46 +30,63 @@ const imgPreview = ref('/images/img-product.png')
 watch(
   () => props.itemData,
   () => {
-    isUpdate.value = props.itemData ? true : false
+    isUpdate.value = !!props.itemData
     formData.value = props.itemData ? { ...props.itemData } : { ...formDataDefault }
     imgPreview.value = formData.value.image_url ?? '/images/img-product.png'
   },
 )
 
-// Function to handle file change and show image preview
-const onPreview = async (event) => {
-  const { fileObject, fileUrl } = await fileExtract(event)
-  // Update formData
-  formData.value.image = fileObject
-  // Update imgPreview state
-  imgPreview.value = fileUrl
+const onPreview = async event => {
+  try {
+    const { fileObject, fileUrl } = await fileExtract(event)
+
+    // 🔐 Extra validation: only PNG/JPEG and 2MB max
+    const file = fileObject
+    const allowedTypes = ['image/png', 'image/jpeg']
+
+    if (!allowedTypes.includes(file.type)) {
+      formAction.value.formErrorMessage = 'Only PNG and JPEG images are allowed.'
+      return
+    }
+
+    if (file.size > 2_000_000) {
+      formAction.value.formErrorMessage = 'Image size should be less than 2 MB.'
+      return
+    }
+
+    formData.value.image = fileObject
+    imgPreview.value = fileUrl
+  } catch (err) {
+    formAction.value.formErrorMessage = 'Failed to load image. Please try again.'
+  }
 }
 
-// Function to reset preview if file-input clear is clicked
 const onPreviewReset = () => {
   formData.value.image = null
   imgPreview.value = formData.value.image_url ?? '/images/img-product.png'
 }
 
 const onSubmit = async () => {
-  // Reset Form Action utils
   formAction.value = { ...formActionDefault, formProcess: true }
 
   try {
-    // Check if isUpdate is true, then do update; if false, add a new subject
     const { data, error } = isUpdate.value
       ? await subjectsStore.updateSubject(formData.value)
       : await subjectsStore.addSubject(formData.value)
 
     if (error) {
-      // Add Error Message and Status Code
       formAction.value.formErrorMessage = error.message
       formAction.value.formStatus = error.status
-      formAction.value.formProcess = false
     } else if (data) {
+      // 📝 log subject created/updated
+      const action = isUpdate.value ? 'subject_updated' : 'subject_created'
+      const name = formData.value.name || 'No name'
+      await logSecurityEvent(action, `Subject: ${name}`)
+
       formAction.value.formSuccessMessage = isUpdate.value
         ? 'Successfully Updated Subject Information.'
         : 'Successfully Added Subject.'
+
       await subjectsStore.getSubjects(props.tableFilters)
 
       setTimeout(() => {
@@ -91,18 +100,16 @@ const onSubmit = async () => {
   }
 }
 
-// Trigger Validators
 const onFormSubmit = () => {
   refVForm.value?.validate().then(({ valid }) => {
     if (valid) onSubmit()
   })
 }
 
-// Form Reset
 const onFormReset = () => {
   formAction.value = { ...formActionDefault }
   formData.value = { ...formDataDefault }
-  imgPreview.value = '/images/img-product.png' // Reset the image preview
+  imgPreview.value = '/images/img-product.png'
   emit('update:isDialogVisible', false)
 }
 </script>
@@ -197,3 +204,4 @@ const onFormReset = () => {
     </v-card>
   </v-dialog>
 </template>
+

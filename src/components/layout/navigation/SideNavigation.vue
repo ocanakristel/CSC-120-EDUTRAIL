@@ -1,10 +1,16 @@
 <script setup>
 import { useDisplay } from 'vuetify'
 import { ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { supabase } from '@/utils/supabase'
+import { useAuthUserStore } from '@/stores/authUser'
 
 const props = defineProps(['isDrawerVisible'])
 const { mobile } = useDisplay()
 const isDrawerVisible = ref(props.isDrawerVisible)
+
+const router = useRouter()
+const authStore = useAuthUserStore()
 
 // Sync prop changes
 watch(
@@ -13,6 +19,18 @@ watch(
     isDrawerVisible.value = props.isDrawerVisible
   },
 )
+
+// LOGOUT HANDLER
+const handleLogout = async () => {
+  try {
+    await supabase.auth.signOut()
+    authStore.$reset()
+    router.push('/')              // ✅ go to login homepage
+  } catch (err) {
+    console.error('Error logging out:', err)
+  }
+}
+
 </script>
 
 <template>
@@ -28,6 +46,7 @@ watch(
       <!-- Dashboard -->
       <v-list-item prepend-icon="mdi-view-dashboard" title="Dashboard" to="/system/dashboard" />
       <v-divider />
+
       <!-- Your Tasks Dropdown -->
       <v-list-group>
         <template #activator="{ props }">
@@ -44,67 +63,89 @@ watch(
           :to="to"
         />
       </v-list-group>
+
       <v-divider />
+
+      <!-- Subjects -->
       <v-list-item prepend-icon="mdi-bookshelf" title="List of Subjects" to="/subjects" />
+
       <v-divider />
+
+      <!-- Logout (BOTTOM ITEM) -->
+      <v-list-item
+        prepend-icon="mdi-logout"
+        title="Logout"
+        @click="handleLogout"
+      />
     </v-list>
   </v-navigation-drawer>
 </template>
-<style scoped>
-.side-nav {
-  background: linear-gradient(180deg, #0b6623 0%, #1aae6f 100%);
-  color: #ffffff;
 
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+<style scoped>
+/* Entire Sidebar Background */
+.side-nav {
+  background: #fff7bd !important;
+  color: #333333 !important;
+  border-right: 1px solid rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(8px);
 }
 
-/* List item styles */
-.v-list-item {
-  color: #e2e2e2 !important;
-  font-weight: 500;
+/* Menu section titles */
+.section-title {
+  color: #555555 !important;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 6px;
+}
 
-  margin: 2px 6px;
-  transition: all 0.2s ease-in-out;
+/* List items */
+.v-list-item {
+  color: #333333 !important;
+  border-radius: 10px;
+  margin: 4px 8px;
+  transition: 0.25s ease;
 }
 
 /* Hover effect */
 .v-list-item:hover {
-  background: rgba(255, 255, 255, 0.15) !important;
-  color: #ffffff !important;
-  transform: translateX(2px);
+  background-color: rgba(255, 240, 124, 0.35) !important;
 }
 
-/* Active item */
+/* Active (selected) menu item */
 .v-list-item--active {
-  background-color: rgba(255, 255, 255, 0.25) !important;
-  color: #ffffff !important;
-  box-shadow: inset 0 0 4px rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 240, 124, 0.55) !important;
+  color: #23311e !important;
+  font-weight: 700 !important;
 }
 
-/* Icons and titles */
-.v-list-item__prepend {
-  color: #ffd700 !important; /* Gold icon accent */
-}
-.v-list-item__title {
-  color: #ffffff !important;
-  font-size: 15px;
-  font-weight: 500;
+/* Icons */
+.v-icon {
+  color: #555555 !important;
+  transition: 0.25s ease;
 }
 
-/* Divider subtle */
+.v-list-item:hover .v-icon,
+.v-list-item--active .v-icon {
+  color: #358600 !important;
+}
+
+/* Submenu arrow */
+.v-list-group__header .v-icon {
+  color: #555555 !important;
+}
+
+/* Divider line */
 .v-divider {
-  border-color: rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
 }
 
-/* Drawer animation */
-.v-navigation-drawer {
-  transition: all 0.3s ease-in-out !important;
+/* Scrollbar Styling (optional but beautiful) */
+::-webkit-scrollbar {
+  width: 6px;
 }
-
-/* Mobile drawer shadow */
-@media (max-width: 960px) {
-  .side-nav {
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
-  }
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
 }
 </style>
+

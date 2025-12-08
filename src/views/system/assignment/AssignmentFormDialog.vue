@@ -7,6 +7,7 @@ import { useDisplay } from 'vuetify'
 import { ref, watch } from 'vue'
 import { useAssignmentsStore } from '@/stores/assignments'
 import { fileExtract } from '@/utils/helpers'
+import { logSecurityEvent } from '@/utils/securityLogs' // 📝 security logging
 
 const props = defineProps(['isDialogVisible', 'itemData'])
 const emit = defineEmits(['update:isDialogVisible'])
@@ -22,8 +23,9 @@ const formDataDefault = {
   due_time: '',
   image: null,
   user_id: authStore.userData?.id,
-  checklist: [], // ← ADDED
+  checklist: [],
 }
+
 const formData = ref({ ...formDataDefault })
 const formAction = ref({ ...formActionDefault })
 const refVForm = ref()
@@ -35,16 +37,36 @@ watch(
   () => {
     isUpdate.value = !!props.itemData
     formData.value = props.itemData
-      ? { ...props.itemData, checklist: props.itemData.checklist || [] } // ← ADDED
+      ? { ...props.itemData, checklist: props.itemData.checklist || [] }
       : { ...formDataDefault }
     imgPreview.value = formData.value.image_url ?? '/images/img-product.png'
   },
 )
 
-const onPreview = async (event) => {
-  const { fileObject, fileUrl } = await fileExtract(event)
-  formData.value.image = fileObject
-  imgPreview.value = fileUrl
+const onPreview = async event => {
+  try {
+    const { fileObject, fileUrl } = await fileExtract(event)
+
+    // 🔐 Extra security: validate type + size
+    const file = fileObject
+    const allowedTypes = ['image/png', 'image/jpeg']
+
+    if (!allowedTypes.includes(file.type)) {
+      formAction.value.formErrorMessage = 'Only PNG and JPEG images are allowed.'
+      return
+    }
+
+    // 2 MB limit (also enforced by imageValidator, but we double-check)
+    if (file.size > 2_000_000) {
+      formAction.value.formErrorMessage = 'Image size should be less than 2 MB.'
+      return
+    }
+
+    formData.value.image = fileObject
+    imgPreview.value = fileUrl
+  } catch (err) {
+    formAction.value.formErrorMessage = 'Failed to load image. Please try again.'
+  }
 }
 
 const onPreviewReset = () => {
@@ -54,14 +76,28 @@ const onPreviewReset = () => {
 
 const onSubmit = async () => {
   formAction.value = { ...formActionDefault, formProcess: true }
+
   try {
+    // make sure user_id is set for new assignments
+    if (!isUpdate.value && !formData.value.user_id) {
+      formData.value.user_id = authStore.userData?.id || null
+    }
+
     const result = isUpdate.value
       ? await assignmentsStore.updateAssignments(formData.value)
       : await assignmentsStore.addAssignments(formData.value)
+
+    // 📝 Log security event (create/update)
+    const action = isUpdate.value ? 'assignment_updated' : 'assignment_created'
+    const desc = formData.value.description || 'No description'
+    await logSecurityEvent(action, `Assignment: ${desc}`)
+
     formAction.value.formSuccessMessage = isUpdate.value
       ? 'Successfully updated assignment.'
       : 'Successfully added assignment.'
+
     await assignmentsStore.getAssignments()
+
     setTimeout(() => {
       onFormReset()
     }, 2500)
@@ -215,3 +251,4 @@ const onFormReset = () => {
   font-weight: 600;
 }
 </style>
+

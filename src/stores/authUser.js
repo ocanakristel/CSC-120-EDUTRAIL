@@ -130,7 +130,7 @@ export const useAuthUserStore = defineStore('authUser', () => {
 
   async function updateUserImage(file) {
     const { data, error } = await supabase.storage
-      .from('acatrail')
+      .from('edutrail')
       .upload('avatars/' + userData.value.id + '-avatar.png', file, {
         cacheControl: '3600',
         upsert: true,
@@ -142,7 +142,7 @@ export const useAuthUserStore = defineStore('authUser', () => {
 
     if (data) {
       const { data: imageData, error: imageError } = supabase.storage
-        .from('acatrail')
+        .from('edutrail')
         .getPublicUrl(data.path)
 
       if (imageError) {

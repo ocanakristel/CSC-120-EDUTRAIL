@@ -1,35 +1,98 @@
 @import './base.css';
 
+/* ====== GLOBAL COLOR PALETTE ====== */
+:root {
+  --pastel-cream: #FFF8DD;  /* 🔥 MAIN BACKGROUND FOR ALL PAGES */
+  --pastel-yellow: #fff07c;
+  --pastel-green: #80ff72;
+  --pastel-blue:  #7ee8fa;
+  --pastel-pink:  #eec0c6;
+  --pastel-accent:#358600;
+
+  --text-main:   #28361f;
+  --text-muted:  #4f5d3c;
+  --white:       #ffffff;
+}
+
+/* ====== GLOBAL BACKGROUND FOR ALL PAGES ====== */
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--pastel-cream) !important; /* 🔥 pastel cream everywhere */
+  color: var(--text-main);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Remove ALL gradients from ANY component */
+* {
+  background-image: none !important;
+}
+
+/* Vuetify root */
 #app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  font-weight: normal;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background: var(--pastel-cream) !important; /* Ensures all pages match */
 }
 
-a,
-.green {
+/* Links */
+a {
+  color: var(--pastel-accent);
   text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
+  transition: 0.2s ease;
 }
 
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
-  }
+a:hover {
+  background-color: rgba(53, 134, 0, 0, 0.1);
 }
 
-@media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
-  }
-
-  #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
-  }
+/* Cards */
+.v-card {
+  background-color: var(--white) !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(40, 54, 31, 0.08) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12) !important;
+  color: var(--text-main) !important;
 }
+
+/* Buttons */
+.v-btn {
+  border-radius: 999px !important;
+  text-transform: none !important;
+  font-weight: 600 !important;
+}
+
+/* Primary action – blue */
+.v-btn.primary,
+.v-btn[color='primary'] {
+  background-color: var(--pastel-blue) !important;
+  color: var(--text-main) !important;
+}
+
+/* Success – green */
+.v-btn.success,
+.v-btn[color='success'] {
+  background-color: var(--pastel-green) !important;
+  color: var(--text-main) !important;
+}
+
+/* Warning – yellow */
+.v-btn.warning,
+.v-btn[color='warning'],
+.v-btn[color='orange'] {
+  background-color: var(--pastel-yellow) !important;
+  color: var(--text-main) !important;
+}
+
+/* Info – pink */
+.v-btn.info,
+.v-btn[color='info'],
+.v-btn[color='deep-orange'] {
+  background-color: var(--pastel-pink) !important;
+  color: var(--text-main) !important;
+}
+
+
+

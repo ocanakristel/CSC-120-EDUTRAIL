@@ -327,84 +327,104 @@ const onChecklistChange = async (project, idx, val) => {
 
 <style scoped>
 .background {
-  background: linear-gradient(90deg, #0b6623 0%, #1aae6f 100%);
+  background: #e8fcd9; /* same soft pastel green */
   min-height: 100vh;
   padding: 24px;
 }
+
+
+/* "STAY ON TRACK" HEADER CARD FOR PROJECTS */
 .header-card {
-  background: #004d25;
-  border-radius: 0;
-  box-shadow: none;
+  background: linear-gradient(120deg, #7ee8fa 0%, #80ff72 50%, #fff07c 100%);
+  border-radius: 20px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
   margin-bottom: 24px;
-  color: #fcd116;
+  color: #ffffff;
 }
+
 .header-title {
-  color: #fcd116;
+  color: #0b0b0b;
   font-weight: 700;
   font-size: 2rem;
   letter-spacing: -0.5px;
 }
+
+/* Tabs */
 .custom-tabs {
   background: transparent;
 }
+
 .custom-tab {
-  color: rgba(255, 255, 255, 0.9) !important;
+  color: rgba(8, 8, 8, 0.92) !important;
   font-weight: 600;
   font-size: 0.9rem;
   text-transform: none;
   padding: 0 24px;
   min-height: 48px;
 }
+
 .custom-tab.v-tab--selected {
-  color: #fcd116 !important;
-  border-bottom: 3px solid #fcd116;
+  color: #358600 !important;
+  border-bottom: 3px solid #358600;
   border-radius: 0;
 }
+
 .tab-label {
   font-weight: 600;
 }
+
 .tab-chip {
   font-weight: 700;
   min-width: 32px;
   height: 24px;
 }
+
+/* CREATE PROJECT BUTTON */
 .create-btn {
-  background: #fcd116 !important;
-  color: #004d25 !important;
+  background: #fff07c !important;
+  color: #358600 !important;
   font-weight: 700;
   padding: 0 24px !important;
   border-radius: 10px;
   text-transform: none;
   font-size: 0.95rem;
 }
+
 .create-btn:hover {
-  background: #ffde42 !important;
+  background: #ffe98f !important;
   transform: translateY(-2px);
 }
+
+/* PROJECT CARDS */
 .modern-project-card {
   border-radius: 14px;
-  background: #f5fbf7 !important;
+  background: #ffffff !important;
   color: #1a1a1a;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
   border: 1px solid #dcdcdc;
 }
+
 .modern-project-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2) !important;
 }
+
 .finished-card {
-  background: #f1f8f4 !important;
-  border: 1px solid #c8e6c9 !important;
+  background: #e8f7f0 !important;
+  border: 1px solid #b7e4c7 !important;
 }
+
 .project-title {
   font-size: 1.15rem;
   font-weight: 600;
-  color: #004d25;
+  color: #358600;
   line-height: 1.3;
 }
+
 .text-muted {
   color: #757575;
 }
+
 .no-checklist-msg {
   display: flex;
   align-items: center;
@@ -413,39 +433,48 @@ const onChecklistChange = async (project, idx, val) => {
   border-radius: 8px;
   border-left: 4px solid #ff9800;
 }
+
 .checklist-section {
   background: #f8f9fa;
   padding: 12px;
   border-radius: 10px;
   border: 1px solid #e0e0e0;
 }
+
 .finished-checklist {
   background: #f1f8f4;
   border: 1px solid #c8e6c9;
 }
+
 .progress-section {
   background: #fafafa;
   padding: 12px 14px;
   border-radius: 10px;
   border: 1px solid #e0e0e0;
 }
+
 .progress-percent {
   font-size: 1.15rem;
   font-weight: 700;
-  color: #004d25;
+  color: #358600;
 }
+
+/* BUTTONS */
 .v-btn.primary {
-  background-color: #fcd116 !important;
-  color: #004d25 !important;
+  background-color: #80ff72 !important;
+  color: #358600 !important;
 }
+
 .v-btn.success {
-  background-color: #004d25 !important;
+  background-color: #358600 !important;
   color: #ffffff !important;
 }
+
 .v-btn.error {
   background-color: #c62828 !important;
   color: #ffffff !important;
 }
+
 @media (max-width: 960px) {
   .header-title {
     font-size: 1.5rem;
@@ -458,6 +487,7 @@ const onChecklistChange = async (project, idx, val) => {
     width: 100%;
   }
 }
+
 .gap-2 {
   gap: 8px;
 }

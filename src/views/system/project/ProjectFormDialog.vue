@@ -7,6 +7,7 @@ import { useDisplay } from 'vuetify'
 import { ref, watch } from 'vue'
 import { useProjectsStore } from '@/stores/projects'
 import { fileExtract } from '@/utils/helpers'
+import { logSecurityEvent } from '@/utils/securityLogs' // 📝 security logging
 
 const props = defineProps(['isDialogVisible', 'itemData'])
 const emit = defineEmits(['update:isDialogVisible'])
@@ -41,11 +42,31 @@ watch(
   },
 )
 
-const onPreview = async (event) => {
-  const { fileObject, fileUrl } = await fileExtract(event)
-  formData.value.image = fileObject
-  imgPreview.value = fileUrl
+const onPreview = async event => {
+  try {
+    const { fileObject, fileUrl } = await fileExtract(event)
+
+    // 🔐 Extra security: validate type + size
+    const file = fileObject
+    const allowedTypes = ['image/png', 'image/jpeg']
+
+    if (!allowedTypes.includes(file.type)) {
+      formAction.value.formErrorMessage = 'Only PNG and JPEG images are allowed.'
+      return
+    }
+
+    if (file.size > 2_000_000) {
+      formAction.value.formErrorMessage = 'Image size should be less than 2 MB.'
+      return
+    }
+
+    formData.value.image = fileObject
+    imgPreview.value = fileUrl
+  } catch (err) {
+    formAction.value.formErrorMessage = 'Failed to load image. Please try again.'
+  }
 }
+
 const onPreviewReset = () => {
   formData.value.image = null
   imgPreview.value = '/images/img-product.png'
@@ -53,14 +74,28 @@ const onPreviewReset = () => {
 
 const onSubmit = async () => {
   formAction.value = { ...formActionDefault, formProcess: true }
+
   try {
+    // ensure user_id is set for new projects
+    if (!isUpdate.value && !formData.value.user_id) {
+      formData.value.user_id = authStore.userData?.id || null
+    }
+
     const result = isUpdate.value
       ? await projectsStore.updateProjects(formData.value)
       : await projectsStore.addProjects(formData.value)
+
+    // 📝 Log security event (create/update)
+    const action = isUpdate.value ? 'project_updated' : 'project_created'
+    const desc = formData.value.description || 'No description'
+    await logSecurityEvent(action, `Project: ${desc}`)
+
     formAction.value.formSuccessMessage = isUpdate.value
       ? 'Successfully updated project.'
       : 'Successfully added project.'
+
     await projectsStore.getProjects()
+
     setTimeout(() => {
       onFormReset()
     }, 2500)
@@ -70,11 +105,13 @@ const onSubmit = async () => {
     formAction.value.formProcess = false
   }
 }
+
 const onFormSubmit = () => {
   refVForm.value?.validate().then(({ valid }) => {
     if (valid) onSubmit()
   })
 }
+
 const onFormReset = () => {
   formAction.value = { ...formActionDefault }
   formData.value = { ...formDataDefault }
@@ -128,6 +165,7 @@ const onFormReset = () => {
                 dense
               ></v-text-field>
             </v-col>
+
             <!-- Checklist Section: Steps/Milestones -->
             <v-col cols="12">
               <label class="mb-1" style="font-weight: 600">Steps / Milestones</label>
@@ -185,7 +223,9 @@ const onFormReset = () => {
             </v-col>
           </v-row>
         </v-card-text>
+
         <v-divider></v-divider>
+
         <v-card-actions class="pa-2">
           <v-spacer></v-spacer>
           <v-btn text variant="plain" prepend-icon="mdi-close" @click="onFormReset">Close</v-btn>
@@ -211,3 +251,4 @@ const onFormReset = () => {
   font-weight: 600;
 }
 </style>
+

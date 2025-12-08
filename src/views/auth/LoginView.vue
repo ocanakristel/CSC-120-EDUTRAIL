@@ -17,7 +17,7 @@ const visible = ref(false)
             <v-img
               class="bounce-animation mb-4"
               src="/images/logo.png"
-              alt="AcaTrail Logo"
+              alt="EduTrail Logo"
               height="350"
             />
             <h3 class="csu-desc">
@@ -51,53 +51,56 @@ const visible = ref(false)
 
 <style scoped>
 .csu-bg {
-  background: linear-gradient(90deg, #0b6623 0%, #1aae6f 100%) !important;
+  background: linear-gradient(135deg, #cfe5d5 0%, #a6d2c8 50%, #8fc6b7 100%) !important;
   min-height: 100vh;
 }
 
+/* Card */
 .csu-card {
-  background: #f5fbf7 !important;
-  border: 1.5px solid #b2c2a0;
-  box-shadow: 0 4px 12px rgba(0, 64, 32, 0.07);
+  background: #ffffff !important;
+  border: 1.5px solid rgba(166, 210, 200, 0.9);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
 }
 
+/* Title */
 .csu-title {
-  color: #006400;
+  color: #254741;
   font-family: 'Open Sans', sans-serif;
-  font-weight: bold;
-  text-shadow: none;
+  font-weight: 700;
 }
 
+/* Divider */
 .csu-divider {
-  background: linear-gradient(90deg, #006400 0%, #ffd700 100%) !important;
-  opacity: 0.9 !important;
+  background: linear-gradient(90deg, #6ea89e 0%, #cfe5d5 100%) !important;
   height: 3px;
   border-radius: 2px;
 }
 
+/* Inputs */
 .v-input:deep(.v-field__outline) {
-  border-color: #006400 !important;
+  border-color: #6ea89e !important;
 }
 
+/* Buttons inside this view */
 .v-btn,
 .v-btn[tabindex] {
-  background-color: #006400 !important;
-  color: #ffd700 !important;
+  background-color: #6ea89e !important;
+  color: #ffffff !important;
   font-weight: 700;
   font-size: 17px;
-  border-radius: 10px;
+  border-radius: 999px;
   letter-spacing: 1px;
   margin-top: 12px;
 }
 
+/* Text */
 input,
 .v-label {
-  color: #34442b !important;
-  font-family: 'Roboto', sans-serif;
+  color: #254741 !important;
 }
 
 .csu-link {
-  color: #ffd700 !important;
+  color: #6ea89e !important;
   font-weight: 500;
 }
 
@@ -105,19 +108,6 @@ h3,
 h5 {
   font-family: 'Lora', serif;
   font-weight: bold;
-  color: #003800;
-}
-
-@keyframes bounce {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-.bounce-animation {
-  animation: bounce 2.5s infinite;
+  color: #254741;
 }
 </style>

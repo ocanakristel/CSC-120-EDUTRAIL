@@ -42,7 +42,7 @@ const getUser = async () => {
 
   userData.value.email = metadata.email
   userData.value.fullname = `${metadata.firstname} ${metadata.lastname}`
-  userData.value.initials = getAvatarText(userData.value.fullname) // Fixed typo here
+  userData.value.initials = getAvatarText(userData.value.fullname) 
 }
 
 // Load functions during rendering
