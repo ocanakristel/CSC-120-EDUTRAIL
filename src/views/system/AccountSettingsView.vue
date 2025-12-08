@@ -3,29 +3,35 @@ import AppLayout from '@/components/layout/AppLayout.vue'
 import SideNavigation from '@/components/layout/navigation/SideNavigation.vue'
 import ProfileForm from '@/components/system/account-settings/ProfileForm.vue'
 import PasswordForm from '@/components/system/account-settings/PasswordForm.vue'
+
 import { useAuthUserStore } from '@/stores/authUser'
 import { onMounted, ref, computed } from 'vue'
 import { useDisplay } from 'vuetify'
 
-// Utilize pre-defined Vue functions
+// Vuetify display helper
 const { mobile } = useDisplay()
 
-// Use Pinia Store
+// Pinia store
 const authStore = useAuthUserStore()
 
-// Reactive states
+// Drawer visibility
 const isDrawerVisible = ref(!mobile.value)
 
-// User Information
+// User information
 const userData = computed(() => authStore.userData)
 const userRole = computed(() => authStore.userRole)
 
-// ✅ avatar source: use uploaded image OR fallback logo
-const avatarSrc = computed(
-  () => userData.value?.image_url || '/logo-icon.jpg'
-)
+// ✅ Avatar source: prefer uploaded image, otherwise fallback to user logo
+// Make sure the file exists at:  public/images/logo-icon.jpg
+const avatarSrc = computed(() => {
+  const url = userData.value?.image_url
+  if (url && String(url).trim() !== '') {
+    return url
+  }
+  return '/images/logo-icon.jpg'
+})
 
-// Retrieve user information on mount
+// Load user info on mount
 onMounted(() => {
   authStore.isAuthenticated()
   authStore.getUserInformation()
@@ -64,11 +70,11 @@ onMounted(() => {
         </v-card>
 
         <v-row>
-          <!-- User Profile Card -->
+          <!-- LEFT: User Profile Card -->
           <v-col cols="12" lg="4">
             <v-card>
               <v-card-text>
-                <!-- 👇 avatar: no red color, uses logo as fallback -->
+                <!-- Avatar -->
                 <v-img
                   width="50%"
                   class="mx-auto rounded-circle"
@@ -88,17 +94,20 @@ onMounted(() => {
                 <div class="text-center">
                   <h4 class="my-2">
                     <b>Full Name:</b>
-                    {{ (userData.firstname || '') + ' ' + (userData.lastname || '') }}
+                    {{
+                      ((userData.firstname || '') + ' ' + (userData.lastname || '')).trim() ||
+                      '—'
+                    }}
                   </h4>
                   <h4 class="my-2">
-                    <b>Email:</b> {{ userData.email }}
+                    <b>Email:</b> {{ userData.email || '—' }}
                   </h4>
                 </div>
               </v-card-text>
             </v-card>
           </v-col>
 
-          <!-- Forms Section -->
+          <!-- RIGHT: Forms Section -->
           <v-col cols="12" lg="8">
             <!-- Profile Information Form -->
             <v-card class="mb-5">
@@ -121,3 +130,4 @@ onMounted(() => {
     </template>
   </AppLayout>
 </template>
+
