@@ -82,7 +82,6 @@ onMounted(() => {
                     <b>Full Name:</b> {{ userData.firstname + ' ' + userData.lastname }}
                   </h4>
                   <h4 class="my-2"><b>Email:</b> {{ userData.email }}</h4>
-                  <h4 class="my-2"><b>Contact No.:</b> {{ userData.phone || 'N/A' }}</h4>
                 </div>
               </v-card-text>
             </v-card>
