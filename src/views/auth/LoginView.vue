@@ -50,15 +50,23 @@ const visible = ref(false)
 </template>
 
 <style scoped>
+/* ✅ Make background match the Register green theme */
 .csu-bg {
-  background: linear-gradient(135deg, #cfe5d5 0%, #a6d2c8 50%, #8fc6b7 100%) !important;
+  /* light green gradient */
+  background: linear-gradient(
+    135deg,
+    #d6f9c6 0%,
+    #c2f0b3 50%,
+    #b0e7a5 100%
+  ) !important;
   min-height: 100vh;
 }
 
 /* Card */
 .csu-card {
   background: #ffffff !important;
-  border: 1.5px solid rgba(166, 210, 200, 0.9);
+  /* softer green border instead of teal */
+  border: 1.5px solid #a5d6a7;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
 }
 
@@ -69,22 +77,22 @@ const visible = ref(false)
   font-weight: 700;
 }
 
-/* Divider */
+/* Divider - green gradient instead of teal */
 .csu-divider {
-  background: linear-gradient(90deg, #6ea89e 0%, #cfe5d5 100%) !important;
+  background: linear-gradient(90deg, #66bb6a 0%, #d6f9c6 100%) !important;
   height: 3px;
   border-radius: 2px;
 }
 
 /* Inputs */
 .v-input:deep(.v-field__outline) {
-  border-color: #6ea89e !important;
+  border-color: #66bb6a !important;
 }
 
-/* Buttons inside this view */
+/* ✅ Buttons: solid green like register page */
 .v-btn,
 .v-btn[tabindex] {
-  background-color: #6ea89e !important;
+  background-color: #43a047 !important; /* green */
   color: #ffffff !important;
   font-weight: 700;
   font-size: 17px;
@@ -100,7 +108,7 @@ input,
 }
 
 .csu-link {
-  color: #6ea89e !important;
+  color: #388e3c !important;
   font-weight: 500;
 }
 
@@ -111,3 +119,4 @@ h5 {
   color: #254741;
 }
 </style>
+
