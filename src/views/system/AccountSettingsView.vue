@@ -20,6 +20,11 @@ const isDrawerVisible = ref(!mobile.value)
 const userData = computed(() => authStore.userData)
 const userRole = computed(() => authStore.userRole)
 
+// ✅ avatar source: use uploaded image OR fallback logo
+const avatarSrc = computed(
+  () => userData.value?.image_url || '/images/logo-icon.jpg'
+)
+
 // Retrieve user information on mount
 onMounted(() => {
   authStore.isAuthenticated()
@@ -63,25 +68,31 @@ onMounted(() => {
           <v-col cols="12" lg="4">
             <v-card>
               <v-card-text>
+                <!-- 👇 avatar: no red color, uses logo as fallback -->
                 <v-img
                   width="50%"
                   class="mx-auto rounded-circle"
-                  color="red-darken-4"
                   aspect-ratio="1"
-                  :src="userData.image_url || '/images/logo-icon.jpg'"
+                  :src="avatarSrc"
                   alt="Profile Picture"
                   cover
                 />
+
                 <h3 class="d-flex align-center justify-center mt-5">
                   <v-icon class="me-2" icon="mdi-account-badge" />
-                  {{ userRole }}
+                  {{ userRole || 'User' }}
                 </h3>
+
                 <v-divider class="my-5" />
+
                 <div class="text-center">
                   <h4 class="my-2">
-                    <b>Full Name:</b> {{ userData.firstname + ' ' + userData.lastname }}
+                    <b>Full Name:</b>
+                    {{ (userData.firstname || '') + ' ' + (userData.lastname || '') }}
                   </h4>
-                  <h4 class="my-2"><b>Email:</b> {{ userData.email }}</h4>
+                  <h4 class="my-2">
+                    <b>Email:</b> {{ userData.email }}
+                  </h4>
                 </div>
               </v-card-text>
             </v-card>
