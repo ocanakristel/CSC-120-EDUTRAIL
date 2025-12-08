@@ -260,11 +260,13 @@ const goToReports = () => {
                   <div class="d-flex justify-space-between align-center">
                     <div>
                       <div class="text-overline text-muted">Due Soon</div>
-                            <div class="text-h3 font-weight-bold" style="color: #ffa726">
-                              {{ upcomingDeadlines.length }}
-                            </div>
-                            <div class="text-caption">Next 3 deadlines</div>
-
+                      <div class="text-h3 font-weight-bold" style="color: #ffa726">
+                        {{ upcomingDeadlines.length }}
+                      </div>
+                      <div class="text-caption">
+                        Next {{ upcomingDeadlines.length }}
+                        deadline<span v-if="upcomingDeadlines.length !== 1">s</span>
+                      </div>
                     </div>
                     <v-avatar color="orange" size="56">
                       <v-icon size="32" color="white">mdi-clock-alert-outline</v-icon>
