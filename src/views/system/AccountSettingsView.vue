@@ -22,7 +22,7 @@ const userRole = computed(() => authStore.userRole)
 
 // ✅ avatar source: use uploaded image OR fallback logo
 const avatarSrc = computed(
-  () => userData.value?.image_url || '/images/logo-icon.jpg'
+  () => userData.value?.image_url || '/logo-icon.jpg'
 )
 
 // Retrieve user information on mount
