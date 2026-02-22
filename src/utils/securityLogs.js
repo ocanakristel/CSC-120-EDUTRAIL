@@ -1,5 +1,5 @@
 // src/utils/securityLogs.js
-import { supabase } from '@/utils/supabase'
+import { api } from '@/utils/api'
 import { useAuthUserStore } from '@/stores/authUser'
 
 export const logSecurityEvent = async (action, details = '') => {
@@ -7,7 +7,7 @@ export const logSecurityEvent = async (action, details = '') => {
     const authStore = useAuthUserStore()
     const userId = authStore.userData?.id || null
 
-    await supabase.from('security_logs').insert([
+    await api.from('security_logs').insert([
       {
         user_id: userId,
         action,

@@ -1,22 +1,14 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import RegisterForm from '@/components/auth/RegisterForm.vue'
-import { supabase } from '@/utils/supabase'
 
 // Not really used, but kept in case other parts rely on them
 const theme = ref('light')
 const visible = ref(false)
 
-// 🔹 When you open the Register page, make sure NO ONE is logged in
-onMounted(async () => {
-  try {
-    await supabase.auth.signOut()
-    console.log('Signed out any existing user before registration')
-  } catch (err) {
-    console.error('Error while signing out on register view:', err)
-  }
-})
+// We no longer call api.auth.signOut() here.
+// Registration will just work without forcing a logout first.
 </script>
 
 <template>

@@ -1,6 +1,6 @@
 <script setup>
 import AlertNotification from '@/components/common/AlertNotification.vue'
-import { formActionDefault, supabase } from '@/utils/supabase.js'
+import { formActionDefault, api } from '@/utils/api'
 import { confirmedValidator, passwordValidator, requiredValidator } from '@/utils/validators'
 import { ref } from 'vue'
 
@@ -24,7 +24,7 @@ const onSubmit = async () => {
   /// Reset Form Action utils; Turn on processing at the same time
   formAction.value = { ...formActionDefault, formProcess: true }
 
-  const { data, error } = await supabase.auth.updateUser({
+  const { data, error } = await api.auth.updateUser({
     password: formData.value.password,
   })
 

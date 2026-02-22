@@ -1,15 +1,15 @@
 <script setup>
 import AlertNotification from '../common/AlertNotification.vue'
-import { supabase } from '@/utils/supabase'
+import { api } from '@/utils/api'
 import { requiredValidator, emailValidator } from '@/utils/validators'
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { logSecurityEvent } from '@/utils/securityLogs' // 👈 logger helper
+import { logSecurityEvent } from '@/utils/securityLogs'
 
 const router = useRouter()
-const theme = ref('light')
 const visible = ref(false)
 const refVForm = ref()
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 const formDataDefault = {
   email: '',
@@ -27,10 +27,9 @@ const formActionDefault = {
 
 const formAction = ref({ ...formActionDefault })
 
-// 🔐 Brute-force / lockout variables
 const failedAttempts = ref(0)
-const lockUntil = ref(0)          // timestamp in ms
-const isLoginLocked = ref(false)  // used in template
+const lockUntil = ref(0)
+const isLoginLocked = ref(false)
 
 const updateLockState = () => {
   if (!lockUntil.value) {
@@ -41,7 +40,6 @@ const updateLockState = () => {
   if (Date.now() < lockUntil.value) {
     isLoginLocked.value = true
   } else {
-    // lock period over
     lockUntil.value = 0
     isLoginLocked.value = false
     localStorage.removeItem('login_lock_until')
@@ -56,9 +54,9 @@ onMounted(() => {
   }
 })
 
-// MAIN submit logic
 const onSubmit = async () => {
   updateLockState()
+
   if (isLoginLocked.value) {
     formAction.value.formErrorMessage =
       'Too many failed attempts. Please try again later.'
@@ -67,26 +65,22 @@ const onSubmit = async () => {
 
   formAction.value = { ...formActionDefault, formProcess: true }
 
-  const { data, error } = await supabase.auth.signInWithPassword({
+  const { error } = await api.auth.signInWithPassword({
     email: formData.value.email,
     password: formData.value.password,
   })
 
   if (error) {
-    // 📝 log failed login
     await logSecurityEvent('login_failed', `Email: ${formData.value.email}`)
 
     failedAttempts.value++
-
-    // lock for 5 minutes after 5 failures
     if (failedAttempts.value >= 5) {
       lockUntil.value = Date.now() + 5 * 60 * 1000
       localStorage.setItem('login_lock_until', String(lockUntil.value))
       updateLockState()
     }
 
-    // 🙈 generic error → avoids enumeration
-    if (error.status === 400 || error.status === 422) {
+    if (error.status === 401 || error.status === 422) {
       formAction.value.formErrorMessage = 'Invalid email or password.'
     } else {
       formAction.value.formErrorMessage =
@@ -94,25 +88,34 @@ const onSubmit = async () => {
     }
 
     formAction.value.formStatus = error.status
-  } else if (data) {
-    // 📝 log success
-    await logSecurityEvent('login_success', 'User logged in.')
-
-    failedAttempts.value = 0
-    lockUntil.value = 0
-    localStorage.removeItem('login_lock_until')
-    updateLockState()
-
-    formAction.value.formSuccessMessage = 'Successfully Logged'
-    router.replace('/system/dashboard')
-
-    // reset form on success
-    formData.value = { ...formDataDefault }
+    formAction.value.formProcess = false
+    return
   }
 
-  // clear password field even on error
-  formData.value.password = ''
+  // 🔥 NEW: confirm session really exists
+  const check = await api.auth.getUser()
+
+  if (check.error || !check.data?.user) {
+    formAction.value.formErrorMessage = 'Login failed. Please try again.'
+    formAction.value.formProcess = false
+    return
+  }
+
+  // ✅ REAL success
+  await logSecurityEvent('login_success', 'User logged in.')
+
+  failedAttempts.value = 0
+  lockUntil.value = 0
+  localStorage.removeItem('login_lock_until')
+  updateLockState()
+
+  formAction.value.formSuccessMessage = 'Successfully Logged'
   formAction.value.formProcess = false
+
+  formData.value.password = ''
+
+  await sleep(500)
+  router.replace('/system/dashboard')
 }
 
 const onFormSubmit = () => {
@@ -187,7 +190,7 @@ const onFormSubmit = () => {
 }
 .csu-login-btn:hover,
 .csu-login-btn:focus {
-  background-color: #034d15 !important; /* darken on hover/focus */
+  background-color: #034d15 !important;
 }
 .text-red {
   color: #d32f2f;

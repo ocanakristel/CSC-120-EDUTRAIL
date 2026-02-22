@@ -1,5 +1,5 @@
 <script setup>
-import { isAuthenticated } from '@/utils/supabase'
+import { isAuthenticated } from '@/utils/api'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import { onMounted, ref } from 'vue'
 
@@ -7,7 +7,7 @@ import { onMounted, ref } from 'vue'
 const isLoggedIn = ref(false)
 const isDrawerVisible = ref(true)
 
-// Get Authentication status from supabase
+// Get Authentication status from API
 const getLoggedStatus = async () => {
   isLoggedIn.value = await isAuthenticated()
 }

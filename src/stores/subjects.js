@@ -1,42 +1,26 @@
 import axios from 'axios'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { supabase, tableSearch } from '@/utils/supabase'
-import { getSlugText } from '@/utils/helpers'
-import { useAuthUserStore } from './authUser'
-import { logSecurityEvent } from '@/utils/securityLogs'
+
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api'
+
+const apiClient = axios.create({
+  baseURL: API_BASE,
+  withCredentials: true,
+})
 
 export const useSubjectsStore = defineStore('subjects', () => {
   const subjectsFromApi = ref([])
   const subjects = ref([])
-  const authStore = useAuthUserStore()
 
   function $reset() {
     subjectsFromApi.value = []
     subjects.value = []
   }
 
-  async function getCurrentUserId() {
-    let userId = authStore.userData?.id
-    if (userId) return userId
-
-    const { data: userData, error } = await supabase.auth.getUser()
-    if (error || !userData?.user) {
-      console.error('No logged-in user (subjects):', error?.message)
-      throw new Error('No logged-in user. Please log in again.')
-    }
-
-    userId = userData.user.id
-    authStore.userData = authStore.userData || {}
-    authStore.userData.id = userId
-    return userId
-  }
-
-  // Retrieve from API and insert more to subjects table in Supabase
+  // Retrieve from external API and insert to database
   async function getSubjectsFromApi() {
     try {
-      const userId = await getCurrentUserId()
-
       const response = await axios.get('https://api.restful-api.dev/objects')
       subjectsFromApi.value = response.data
 
@@ -44,42 +28,33 @@ export const useSubjectsStore = defineStore('subjects', () => {
         name: subject.name,
         units: subject.units,
         description: subject.data?.description ?? '',
-        user_id: userId,
       }))
 
-      const { error } = await supabase.from('subjects').insert(transformedData).select()
+      // Insert to backend (backend will add user_id automatically)
+      for (const item of transformedData) {
+        await apiClient.post('/subjects', item)
+      }
 
-      if (error) throw error
-
+      // Refresh local list
       await getSubjects({ search: '' })
-
-      await logSecurityEvent(
-        'subjects_imported_from_api',
-        `Imported ${transformedData.length} subjects from API`
-      )
     } catch (error) {
       console.error('Error fetching or inserting subjects:', error.message)
     }
   }
 
-  // Retrieve from Supabase (only subjects of this user)
-  async function getSubjects(tableFilters) {
+  // Get all subjects for authenticated user
+  async function getSubjects(tableFilters = {}) {
     try {
-      const userId = await getCurrentUserId()
-      const search = tableSearch(tableFilters.search)
-
-      const query = supabase
-        .from('subjects')
-        .select('*')
-        .order('name', { ascending: true })
-        .ilike('name', '%' + search + '%')
-
-      query.eq('user_id', userId)
-
-      const { data, error } = await query
-
-      if (error) throw error
-      subjects.value = data || []
+      const response = await apiClient.get('/subjects')
+      const data = response.data?.data?.subjects || response.data?.data || []
+      
+      // Apply search filter if provided
+      if (tableFilters.search) {
+        const search = tableFilters.search.toLowerCase()
+        subjects.value = data.filter(s => s.name.toLowerCase().includes(search))
+      } else {
+        subjects.value = data
+      }
     } catch (error) {
       console.error('Error fetching subjects:', error.message)
       subjects.value = []
@@ -90,134 +65,93 @@ export const useSubjectsStore = defineStore('subjects', () => {
   async function addSubject(formData) {
     const { image, ...data } = formData
 
-    const userId = await getCurrentUserId()
-    data.user_id = userId
-
-    if (image) {
-      const imageUrl = await updateSubjectImage(image, data.name)
-      if (imageUrl) {
-        data.image_url = imageUrl
-      } else {
-        console.error('Image upload failed, no URL returned.')
+    try {
+      if (image) {
+        const imageUrl = await uploadSubjectImage(image)
+        if (imageUrl) {
+          data.image_url = imageUrl
+        }
       }
-    }
 
-    const { data: insertedData, error } = await supabase
-      .from('subjects')
-      .insert([data])
-      .select()
+      const response = await apiClient.post('/subjects', data)
+      const newSubject = response.data?.data?.subject || response.data?.data
+      
+      if (newSubject) {
+        subjects.value.push(newSubject)
+      }
 
-    if (error) {
-      console.error('Error inserting subject:', error.message)
+      return { data: newSubject }
+    } catch (error) {
+      console.error('Error adding subject:', error.message)
       return { error }
     }
-
-    if (insertedData && insertedData.length > 0) {
-      await logSecurityEvent(
-        'subject_created',
-        `Subject: ${insertedData[0].name || 'No name'}`
-      )
-    }
-
-    return { data: insertedData }
   }
 
-  // Update Subjects
+  // Update subject
   async function updateSubject(formData) {
-    const userId = await getCurrentUserId()
+    const { image, id, ...data } = formData
 
-    if (formData.image) {
-      const imageUrl = await updateSubjectImage(formData.image, formData.name)
-      if (imageUrl) {
-        formData.image_url = imageUrl
-      } else {
-        console.error('Image upload failed, no URL returned.')
+    try {
+      if (image) {
+        const imageUrl = await uploadSubjectImage(image)
+        if (imageUrl) {
+          data.image_url = imageUrl
+        }
       }
-      delete formData.image
-    }
 
-    const { data: updatedData, error } = await supabase
-      .from('subjects')
-      .update(formData)
-      .eq('id', formData.id)
-      .eq('user_id', userId)
-      .select()
+      const response = await apiClient.put(`/subjects/${id}`, data)
+      const updatedSubject = response.data?.data?.subject || response.data?.data
 
-    if (error) {
+      // Update local list
+      const index = subjects.value.findIndex(s => s.id === id)
+      if (index >= 0 && updatedSubject) {
+        subjects.value[index] = updatedSubject
+      }
+
+      return { data: updatedSubject }
+    } catch (error) {
       console.error('Error updating subject:', error.message)
       return { error }
     }
-
-    if (updatedData && updatedData.length > 0) {
-      await logSecurityEvent(
-        'subject_updated',
-        `Subject ID: ${formData.id}, Name: ${formData.name || 'No name'}`
-      )
-    }
-
-    return { data: updatedData }
   }
 
-  // Update Subject Image (extra validation)
-  async function updateSubjectImage(file, filename) {
+  // Upload subject image
+  async function uploadSubjectImage(file) {
+    if (!file) return null
+
     try {
       const allowedTypes = ['image/png', 'image/jpeg']
-      if (!file || !allowedTypes.includes(file.type)) {
+      if (!allowedTypes.includes(file.type)) {
         throw new Error('Invalid image type. Only PNG and JPEG allowed.')
       }
       if (file.size > 2_000_000) {
         throw new Error('Image too large. Max size is 2 MB.')
       }
 
-      const filePath = 'subjects/' + getSlugText(filename || 'subject') + '.png'
+      const fd = new FormData()
+      fd.append('file', file)
 
-      const { data, error } = await supabase.storage
-        .from('edutrail')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: true,
-        })
+      const response = await apiClient.post('/storage/edutrail/upload', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
 
-      if (error) {
-        console.error('Error uploading image:', error.message)
-        return null
-      }
-
-      const { data: imageData, error: urlError } = await supabase.storage
-        .from('edutrail')
-        .getPublicUrl(data.path)
-
-      if (urlError) {
-        console.error('Error retrieving image URL:', urlError.message)
-        return null
-      }
-
-      return imageData.publicUrl
-    } catch (err) {
-      console.error('Unexpected error in image upload:', err)
+      return response.data?.publicUrl || response.data?.data?.publicUrl
+    } catch (error) {
+      console.error('Error uploading image:', error.message)
       return null
     }
   }
 
-  // Delete a subject by ID
+  // Delete subject
   async function deleteSubject(id) {
-    const userId = await getCurrentUserId()
-
-    const { error } = await supabase
-      .from('subjects')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', userId)
-
-    if (error) {
+    try {
+      await apiClient.delete(`/subjects/${id}`)
+      subjects.value = subjects.value.filter(subject => subject.id !== id)
+      return { success: true }
+    } catch (error) {
       console.error('Error deleting subject:', error.message)
       return { error }
     }
-
-    subjects.value = subjects.value.filter(subject => subject.id !== id)
-    await logSecurityEvent('subject_deleted', `Subject ID: ${id}`)
-
-    return { success: true }
   }
 
   return {

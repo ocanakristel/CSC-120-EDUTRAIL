@@ -3,7 +3,7 @@ import SubjectFormDialog from './SubjectFormDialog.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import { onMounted, ref } from 'vue'
 import { useSubjectsStore } from '@/stores/subjects'
-import { formActionDefault } from '@/utils/supabase'
+import { formActionDefault } from '@/utils/api'
 
 // Use Pinia Store
 const subjectsStore = useSubjectsStore()

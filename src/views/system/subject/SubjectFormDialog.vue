@@ -1,7 +1,7 @@
 <script setup>
 import AlertNotification from '@/components/common/AlertNotification.vue'
 import { requiredValidator, imageValidator } from '@/utils/validators'
-import { formActionDefault } from '@/utils/supabase.js'
+import { formActionDefault } from '@/utils/api'
 import { useSubjectsStore } from '@/stores/subjects'
 import { fileExtract } from '@/utils/helpers'
 import { useDisplay } from 'vuetify'

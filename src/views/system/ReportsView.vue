@@ -4,7 +4,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import SideNavigation from '@/components/layout/navigation/SideNavigation.vue'
-import { supabase } from '@/utils/supabase'
+import { api } from '@/utils/api'
 
 import { useAssignmentsStore } from '@/stores/assignments'
 import { useProjectsStore } from '@/stores/projects'
@@ -40,7 +40,7 @@ const formatDate = (dateString) => {
 onMounted(async () => {
   isLoading.value = true
   try {
-    const { data, error } = await supabase.auth.getUser()
+    const { data, error } = await api.auth.getUser()
     if (error || !data?.user) {
       console.error('No logged-in user, redirecting to login...', error?.message)
       router.replace('/')
@@ -153,26 +153,28 @@ const topProjects = computed(() =>
 
     <template #content>
       <v-container fluid class="reports-container">
-        <!-- Header -->
-        <v-row class="mb-4">
-          <v-col cols="12" md="8">
-            <h1 class="text-h4 font-weight-bold mb-1">Reports</h1>
-            <p class="text-subtitle-1 text-muted">
-              Analyze your academic workload, completion trends, and overdue tasks.
-            </p>
-          </v-col>
-          <v-col cols="12" md="4" class="d-flex justify-end align-center">
-            <v-btn
-              color="primary"
-              variant="flat"
-              class="mr-2"
-              @click="router.push({ name: 'dashboard' })"
-            >
-              <v-icon left>mdi-view-dashboard</v-icon>
-              Back to Dashboard
-            </v-btn>
-          </v-col>
-        </v-row>
+        <!-- Header Banner -->
+        <div class="header-banner mb-5">
+          <v-row align="center">
+            <v-col cols="12" md="8">
+              <h1 class="text-h4 font-weight-bold mb-2">📊 Reports</h1>
+              <p class="text-subtitle-1 banner-text">
+                Analyze your academic workload, completion trends, and overdue tasks.
+              </p>
+            </v-col>
+            <v-col cols="12" md="4" class="d-flex justify-end align-center">
+              <v-btn
+                color="white"
+                variant="flat"
+                class="mr-2"
+                @click="router.push({ name: 'dashboard' })"
+              >
+                <v-icon left>mdi-view-dashboard</v-icon>
+                Back to Dashboard
+              </v-btn>
+            </v-col>
+          </v-row>
+        </div>
 
         <!-- Loading -->
         <div v-if="isLoading" class="text-center py-10">
@@ -429,14 +431,33 @@ const topProjects = computed(() =>
   padding-block: 24px;
 }
 
+.header-banner {
+  background: linear-gradient(135deg, #188221 0%, #2aa546 100%);
+  color: #ffffff;
+  padding: 32px;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(24, 130, 33, 0.15);
+}
+
+.header-banner .text-h4 {
+  color: #ffffff !important;
+}
+
+.banner-text {
+  color: #e7ece5 !important;
+}
+
 .stats-card,
 .content-card {
   border-radius: 12px !important;
   border: 1px solid rgba(37, 71, 65, 0.12);
   background-color: #ffffff !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+  transition: all 0.3s ease;
 }
 
-.stats-card:hover {
+.stats-card:hover,
+.content-card:hover {
   transform: translateY(-3px);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14) !important;
 }

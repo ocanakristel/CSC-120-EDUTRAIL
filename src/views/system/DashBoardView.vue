@@ -9,7 +9,7 @@ import { useAssignmentsStore } from '@/stores/assignments'
 
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { supabase } from '@/utils/supabase'
+import { api } from '@/utils/api'
 
 // ───────────────── STATE ─────────────────
 const router = useRouter()
@@ -43,7 +43,7 @@ const formatDate = (dateString) => {
 onMounted(async () => {
   isLoading.value = true
   try {
-    const { data, error } = await supabase.auth.getUser()
+    const { data, error } = await api.auth.getUser()
     if (error || !data?.user) {
       router.replace('/')
       return
@@ -498,5 +498,6 @@ const goToReports = () => {
   color: #ffffff !important;
 }
 </style>
+
 
 

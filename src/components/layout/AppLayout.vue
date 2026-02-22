@@ -1,5 +1,5 @@
 <script setup>
-import { isAuthenticated } from '@/utils/supabase'
+import { isAuthenticated } from '@/utils/api'
 import ProfileHeaderNavigation from './ProfileHeaderNavigation.vue'
 import { onMounted, ref } from 'vue'
 
@@ -65,7 +65,7 @@ onMounted(() => {
       <!-- FOOTER -->
       <v-footer class="pastel-footer" border app>
         <div class="d-flex justify-center align-center w-100">
-          © 2025 EduTrail Website
+          © 2026 EduTrail Website
         </div>
       </v-footer>
     </v-app>

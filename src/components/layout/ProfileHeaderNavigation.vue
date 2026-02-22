@@ -1,5 +1,5 @@
 <script setup>
-import { supabase, formActionDefault } from '@/utils/supabase'
+import { api, formActionDefault } from '@/utils/api'
 import { getAvatarText } from '@/utils/helpers'
 import { useRouter } from 'vue-router'
 import { onMounted, ref } from 'vue'
@@ -11,7 +11,7 @@ const userData = ref({
   initials: '',
   email: '',
   fullname: '',
-  avatarUrl: '',        // 👈 add avatar url here
+  avatarUrl: '',     
 })
 
 const formAction = ref({
@@ -23,7 +23,7 @@ const onLogOut = async () => {
   formAction.value = { ...formActionDefault }
   formAction.value.formProcess = true
 
-  const { error } = await supabase.auth.signOut()
+  const { error } = await api.auth.signOut()
   if (error) {
     console.error('Error during logout:', error)
     return
@@ -38,7 +38,7 @@ const getUser = async () => {
     data: {
       user: { user_metadata: metadata },
     },
-  } = await supabase.auth.getUser()
+  } = await api.auth.getUser()
 
   userData.value.email = metadata.email
   userData.value.fullname = `${metadata.firstname} ${metadata.lastname}`

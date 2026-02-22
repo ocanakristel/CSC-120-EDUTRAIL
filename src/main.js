@@ -1,5 +1,5 @@
 // src/main.js
-// import './assets/main.css'
+import '@/assets/main.css'
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
@@ -14,40 +14,47 @@ import * as directives from 'vuetify/directives'
 import App from './App.vue'
 import router from './router'
 
-// ✅ Supabase client
-import { supabase } from './utils/supabase'
+// API client
+import { api } from './utils/api'
 
 const app = createApp(App)
 
-// ✅ Vuetify config
+// Vuetify config
 const vuetify = createVuetify({
-  icons: {
-    defaultSet: 'mdi',
-  },
+  icons: { defaultSet: 'mdi' },
   components,
   directives,
 })
 
-// ✅ Global plugins
+// Global plugins
 app.use(createPinia())
 app.use(router)
 app.use(vuetify)
 
-// ✅ Make Supabase available in all components if you want `inject('$supabase')`
-app.provide('$supabase', supabase)
+// Optional: make API injectable
+app.provide('$api', api)
 
-// ✅ Listen to auth changes (debug “No logged-in user” issue)
-supabase.auth.onAuthStateChange((event, session) => {
-  console.log('Auth event:', event)
-  console.log('Current session:', session)
-})
+// Debug auth events only in dev
+if (import.meta.env.DEV) {
+  api.auth.onAuthStateChange((event, session) => {
+    console.log('Auth event:', event)
+    console.log('Current session:', session)
+  })
+}
 
-// ✅ Wait for initial session before mounting (optional but helpful)
+// Bootstrap (don’t block mount if session check fails)
 async function bootstrap() {
-  const { data } = await supabase.auth.getSession()
-  console.log('Initial Supabase session on app load:', data?.session)
-
-  app.mount('#app')
+  try {
+    const { data, error } = await api.auth.getSession()
+    if (import.meta.env.DEV) {
+      console.log('Initial API session on app load:', data?.session)
+      if (error) console.warn('Initial session error:', error)
+    }
+  } catch (e) {
+    if (import.meta.env.DEV) console.warn('bootstrap getSession failed:', e)
+  } finally {
+    app.mount('#app')
+  }
 }
 
 bootstrap()

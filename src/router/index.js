@@ -1,5 +1,5 @@
 // src/router/index.js
-import { isAuthenticated } from '@/utils/supabase'
+import { isAuthenticated } from '@/utils/api'
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '@/views/auth/LoginView.vue'
 import RegisterView from '@/views/auth/RegisterView.vue'

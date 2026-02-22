@@ -1,75 +1,36 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import axios from 'axios'
-import { supabase } from '@/utils/supabase'
 import { useAuthUserStore } from './authUser'
-import { getSlugText } from '@/utils/helpers'
-import { logSecurityEvent } from '@/utils/securityLogs'
+
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api'
+
+// Configure axios to always send cookies (for Laravel session)
+const apiClient = axios.create({
+  baseURL: API_BASE,
+  withCredentials: true, // CRITICAL: Send cookies with every request
+})
 
 export const useProjectsStore = defineStore('projects', () => {
   const projects = ref([])
-  const projectsFromApi = ref([])
   const authStore = useAuthUserStore()
 
-  async function getCurrentUserId() {
-    let userId = authStore.userData?.id
-    if (userId) return userId
-
-    const { data: userData, error } = await supabase.auth.getUser()
-    if (error || !userData?.user) {
-      console.error('No logged-in user (projects):', error?.message)
-      throw new Error('No logged-in user. Please log in again.')
-    }
-
-    userId = userData.user.id
-    authStore.userData = authStore.userData || {}
-    authStore.userData.id = userId
-    return userId
+  // Normalize backend response: convert 'steps' to 'checklist'
+  function normalizeProject(p) {
+    const checklist = Array.isArray(p.steps) ? p.steps : []
+    return { ...p, checklist }
   }
 
   function $reset() {
     projects.value = []
-    projectsFromApi.value = []
-  }
-
-  async function getProjectsFromApi() {
-    try {
-      const userId = await getCurrentUserId()
-
-      const response = await axios.get('https://api.restful-api.dev/objects')
-      projectsFromApi.value = response.data
-
-      const transformedData = response.data.map(project => ({
-        description: project?.description ?? '',
-        additional_notes: project?.additional_notes ?? '',
-        user_id: userId,
-        subjects_id: project?.userData?.id ?? null,
-      }))
-
-      const { error } = await supabase.from('projects').insert(transformedData).select()
-
-      if (error) throw error
-
-      await logSecurityEvent(
-        'projects_imported_from_api',
-        `Imported ${transformedData.length} projects from API`
-      )
-    } catch (error) {
-      console.error('Error fetching or inserting projects:', error.message)
-    }
   }
 
   async function getProjects() {
     try {
-      const userId = await getCurrentUserId()
-
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('user_id', userId)
-
-      if (error) throw error
-      projects.value = data || []
+      // No need to get user ID - backend queries by authenticated user
+      const response = await apiClient.get('/projects')
+      const data = response.data?.data?.projects || []
+      projects.value = data.map(normalizeProject)
     } catch (error) {
       console.error('Error fetching projects:', error.message)
       projects.value = []
@@ -79,125 +40,68 @@ export const useProjectsStore = defineStore('projects', () => {
   async function addProjects(formData) {
     const { image, ...data } = formData
 
-    const userId = await getCurrentUserId()
-    data.user_id = userId
-
-    if (image) {
-      try {
-        const imageUrl = await updateProjectImage(image, formData.description)
-        data.image_url = imageUrl
-      } catch (error) {
-        console.error('Error uploading project image:', error.message)
-        throw new Error('Failed to upload image. Please try again.')
-      }
-    }
-
     try {
-      const { data: insertedData, error } = await supabase
-        .from('projects')
-        .insert([data])
-        .select()
+      // Prepare form data to send with file
+      const fd = new FormData()
+      Object.entries(data).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          if (Array.isArray(value) || (typeof value === 'object' && !(value instanceof File))) {
+            fd.append(key, JSON.stringify(value))
+          } else {
+            fd.append(key, value)
+          }
+        }
+      })
 
-      if (error) throw error
-
-      if (insertedData && insertedData.length > 0) {
-        projects.value.push(insertedData[0])
-        await logSecurityEvent(
-          'project_created',
-          `Project: ${insertedData[0].description || 'No description'}`
-        )
+      // Attach image if provided
+      if (image) {
+        fd.append('file', image)
       }
-      return insertedData
+
+      const response = await apiClient.post('/projects', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+
+      const newProject = response.data?.data?.project
+      if (newProject) {
+        projects.value.push(normalizeProject(newProject))
+      }
+
+      return response.data
     } catch (error) {
       console.error('Error adding project:', error.message)
       throw error
     }
   }
 
-  // Update Project Image (extra validation)
-  async function updateProjectImage(file, filename) {
-    const allowedTypes = ['image/png', 'image/jpeg']
-    if (!file || !allowedTypes.includes(file.type)) {
-      throw new Error('Invalid image type. Only PNG and JPEG allowed.')
-    }
-    if (file.size > 2_000_000) {
-      throw new Error('Image too large. Max size is 2 MB.')
-    }
-
-    const filePath = `projects/${getSlugText(filename || 'project')}.png`
-    try {
-      const { data, error } = await supabase.storage
-        .from('edutrail')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: true,
-        })
-
-      if (error) throw error
-
-      const { data: imageData, error: urlError } = supabase.storage
-        .from('edutrail')
-        .getPublicUrl(data.path)
-
-      if (urlError) throw urlError
-
-      return imageData.publicUrl
-    } catch (error) {
-      console.error('Error uploading image:', error.message)
-      throw error
-    }
-  }
-
   async function updateProjects(formData) {
-    const { image } = formData
+    const { image, id, ...data } = formData
 
-    if (image) {
-      formData.image_url = await updateProjectImage(image, formData.description)
-      delete formData.image
-    }
+    try {
+      if (image) {
+        const imageUrl = await uploadProjectImage(image)
+        data.image_url = imageUrl
+      }
 
-    const userId = await getCurrentUserId()
+      const response = await apiClient.put(`/projects/${id}`, data)
+      
+      // Update local project
+      const index = projects.value.findIndex(p => p.id === id)
+      if (index >= 0 && response.data?.data?.project) {
+        projects.value[index] = normalizeProject(response.data.data.project)
+      }
 
-    const { data, error } = await supabase
-      .from('projects')
-      .update(formData)
-      .eq('id', formData.id)
-      .eq('user_id', userId)
-      .select()
-
-    if (error) {
+      return { data: response.data }
+    } catch (error) {
       console.error('Error updating project:', error.message)
       return { error }
     }
-
-    if (data && data.length > 0) {
-      await logSecurityEvent(
-        'project_updated',
-        `Project ID: ${formData.id}, Description: ${formData.description || 'No description'}`
-      )
-    }
-
-    return { data }
   }
 
   async function deleteProjects(id) {
     try {
-      const userId = await getCurrentUserId()
-
-      const { error } = await supabase
-        .from('projects')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', userId)
-
-      if (error) {
-        console.error('Error deleting project:', error.message)
-        return { error }
-      }
-
+      await apiClient.delete(`/projects/${id}`)
       projects.value = projects.value.filter(project => project.id !== id)
-      await logSecurityEvent('project_deleted', `Project ID: ${id}`)
-
       return { success: true }
     } catch (error) {
       console.error('Error deleting project:', error.message)
@@ -207,24 +111,68 @@ export const useProjectsStore = defineStore('projects', () => {
 
   async function finishProject(id) {
     try {
-      const userId = await getCurrentUserId()
-
-      const { data, error } = await supabase
-        .from('projects')
-        .update({ status: 'finished' })
-        .eq('id', id)
-        .eq('user_id', userId)
-        .select()
-
-      if (error) throw error
-
+      const response = await apiClient.put(`/projects/${id}`, { status: 'finished' })
       projects.value = projects.value.filter(project => project.id !== id)
-      await logSecurityEvent('project_finished', `Project ID: ${id}`)
-
-      return { success: true, data }
+      return { success: true, data: response.data }
     } catch (error) {
       console.error('Error finishing project:', error.message)
       return { error }
+    }
+  }
+
+  // Upload image and return public URL
+  async function uploadProjectImage(file) {
+    if (!file) return null
+
+    const allowedTypes = ['image/png', 'image/jpeg']
+    if (!allowedTypes.includes(file.type)) {
+      throw new Error('Invalid image type. Only PNG and JPEG allowed.')
+    }
+    if (file.size > 2_000_000) {
+      throw new Error('Image too large. Max size is 2 MB.')
+    }
+
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+
+      const response = await apiClient.post('/storage/edutrail/upload', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+
+      // Backend returns publicUrl in both places for compatibility
+      return response.data?.publicUrl || response.data?.data?.publicUrl
+    } catch (error) {
+      console.error('Error uploading image:', error.message)
+      throw error
+    }
+  }
+
+  // Upload image and return public URL
+  async function uploadProjectImage(file) {
+    if (!file) return null
+
+    const allowedTypes = ['image/png', 'image/jpeg']
+    if (!allowedTypes.includes(file.type)) {
+      throw new Error('Invalid image type. Only PNG and JPEG allowed.')
+    }
+    if (file.size > 2_000_000) {
+      throw new Error('Image too large. Max size is 2 MB.')
+    }
+
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+
+      const response = await apiClient.post('/storage/edutrail/upload', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+
+      // Backend returns publicUrl in both places for compatibility
+      return response.data?.publicUrl || response.data?.data?.publicUrl
+    } catch (error) {
+      console.error('Error uploading image:', error.message)
+      throw error
     }
   }
 
@@ -234,8 +182,6 @@ export const useProjectsStore = defineStore('projects', () => {
     updateProjects,
     addProjects,
     projects,
-    projectsFromApi,
-    getProjectsFromApi,
     getProjects,
     $reset,
   }

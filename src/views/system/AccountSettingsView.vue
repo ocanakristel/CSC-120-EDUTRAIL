@@ -8,30 +8,28 @@ import { useAuthUserStore } from '@/stores/authUser'
 import { onMounted, ref, computed } from 'vue'
 import { useDisplay } from 'vuetify'
 
-// Vuetify display helper
+// Utilize pre-defined Vue functions
 const { mobile } = useDisplay()
 
-// Pinia store
+// Use Pinia Store
 const authStore = useAuthUserStore()
 
-// Drawer visibility
+// Reactive states
 const isDrawerVisible = ref(!mobile.value)
 
-// User information
+// User Information
 const userData = computed(() => authStore.userData)
 const userRole = computed(() => authStore.userRole)
 
-// ✅ Avatar source: prefer uploaded image, otherwise fallback to user logo
-// Make sure the file exists at:  public/images/logo-icon.jpg
-const avatarSrc = computed(() => {
-  const url = userData.value?.image_url
-  if (url && String(url).trim() !== '') {
-    return url
-  }
-  return '/images/logo-icon.jpg'
+// Computed full name (safe even if data not loaded yet)
+const fullName = computed(() => {
+  const first = userData.value?.firstname || ''
+  const last = userData.value?.lastname || ''
+  const name = `${first} ${last}`.trim()
+  return name
 })
 
-// Load user info on mount
+// Retrieve user information on mount
 onMounted(() => {
   authStore.isAuthenticated()
   authStore.getUserInformation()
@@ -64,29 +62,30 @@ onMounted(() => {
           </template>
           <template #subtitle>
             <p class="ms-4 text-wrap">
-              Edit profile information and change your password.
+              Edit profile information, update profile picture, and change your password.
             </p>
           </template>
         </v-card>
 
         <v-row>
-          <!-- LEFT: User Profile Card -->
+          <!-- User Profile Card -->
           <v-col cols="12" lg="4">
             <v-card>
               <v-card-text>
-                <!-- Avatar -->
                 <v-img
                   width="50%"
                   class="mx-auto rounded-circle"
+                  color="red-darken-4"
                   aspect-ratio="1"
-                  :src="avatarSrc"
+                  :src="userData.image_url || '/images/logo-icon.jpg'"
                   alt="Profile Picture"
                   cover
                 />
 
+                <!-- 👇 This line now shows the user's name instead of just 'User' -->
                 <h3 class="d-flex align-center justify-center mt-5">
                   <v-icon class="me-2" icon="mdi-account-badge" />
-                  {{ userRole || 'User' }}
+                  {{ fullName || userRole || 'User' }}
                 </h3>
 
                 <v-divider class="my-5" />
@@ -94,20 +93,17 @@ onMounted(() => {
                 <div class="text-center">
                   <h4 class="my-2">
                     <b>Full Name:</b>
-                    {{
-                      ((userData.firstname || '') + ' ' + (userData.lastname || '')).trim() ||
-                      '—'
-                    }}
+                    {{ fullName || '—' }}
                   </h4>
                   <h4 class="my-2">
-                    <b>Email:</b> {{ userData.email || '—' }}
+                    <b>Email:</b> {{ userData.email }}
                   </h4>
                 </div>
               </v-card-text>
             </v-card>
           </v-col>
 
-          <!-- RIGHT: Forms Section -->
+          <!-- Forms Section -->
           <v-col cols="12" lg="8">
             <!-- Profile Information Form -->
             <v-card class="mb-5">
@@ -130,4 +126,3 @@ onMounted(() => {
     </template>
   </AppLayout>
 </template>
-

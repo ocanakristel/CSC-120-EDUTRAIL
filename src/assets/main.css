@@ -2,7 +2,7 @@
 
 /* ====== GLOBAL COLOR PALETTE ====== */
 :root {
-  --pastel-cream: #FFF8DD;  /* 🔥 MAIN BACKGROUND FOR ALL PAGES */
+  --pastel-cream: #FFF8DD;
   --pastel-yellow: #fff07c;
   --pastel-green: #80ff72;
   --pastel-blue:  #7ee8fa;
@@ -18,15 +18,15 @@
 body {
   margin: 0;
   padding: 0;
-  background-color: var(--pastel-cream) !important; /* 🔥 pastel cream everywhere */
+  background-color: var(--pastel-cream); /* ✅ removed !important */
   color: var(--text-main);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-/* Remove ALL gradients from ANY component */
-* {
-  background-image: none !important;
-}
+/* ✅ DO NOT kill Vuetify gradients/overlays globally
+   (this was breaking headers/overlays and causing faded UI)
+*/
+/* * { background-image: none !important; } */
 
 /* Vuetify root */
 #app {
@@ -34,7 +34,7 @@ body {
   margin: 0;
   padding: 0;
   min-height: 100vh;
-  background: var(--pastel-cream) !important; /* Ensures all pages match */
+  background: var(--pastel-cream); /* ✅ removed !important */
 }
 
 /* Links */
@@ -48,51 +48,49 @@ a:hover {
   background-color: rgba(53, 134, 0, 0, 0.1);
 }
 
-/* Cards */
+/* ✅ SAFE CARD STYLING:
+   Do NOT override all v-cards’ colors/background/shadows.
+   Only give a subtle rounding globally (won’t break special cards).
+*/
 .v-card {
-  background-color: var(--white) !important;
-  border-radius: 16px !important;
-  border: 1px solid rgba(40, 54, 31, 0.08) !important;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12) !important;
-  color: var(--text-main) !important;
+  border-radius: 16px;
 }
 
-/* Buttons */
+/* ✅ OPTIONAL: use this class ONLY where you want white + shadow cards */
+.card-soft {
+  background-color: var(--white);
+  border: 1px solid rgba(40, 54, 31, 0.08);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  color: var(--text-main);
+}
+
+/* ✅ SAFE BUTTON STYLING:
+   Do not force ALL buttons to pill and overwrite Vuetify colors.
+*/
 .v-btn {
-  border-radius: 999px !important;
-  text-transform: none !important;
-  font-weight: 600 !important;
+  text-transform: none;
+  font-weight: 600;
 }
 
-/* Primary action – blue */
-.v-btn.primary,
-.v-btn[color='primary'] {
+/* ✅ OPTIONAL: use this class only for pill buttons */
+.btn-pill {
+  border-radius: 999px;
+}
+
+/* ✅ OPTIONAL color helpers (use classes, NOT attribute selectors) */
+.btn-blue {
   background-color: var(--pastel-blue) !important;
   color: var(--text-main) !important;
 }
-
-/* Success – green */
-.v-btn.success,
-.v-btn[color='success'] {
+.btn-green {
   background-color: var(--pastel-green) !important;
   color: var(--text-main) !important;
 }
-
-/* Warning – yellow */
-.v-btn.warning,
-.v-btn[color='warning'],
-.v-btn[color='orange'] {
+.btn-yellow {
   background-color: var(--pastel-yellow) !important;
   color: var(--text-main) !important;
 }
-
-/* Info – pink */
-.v-btn.info,
-.v-btn[color='info'],
-.v-btn[color='deep-orange'] {
+.btn-pink {
   background-color: var(--pastel-pink) !important;
   color: var(--text-main) !important;
 }
-
-
-

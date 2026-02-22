@@ -1,7 +1,7 @@
 <script setup>
 import AlertNotification from '@/components/common/AlertNotification.vue'
 import { requiredValidator, imageValidator } from '@/utils/validators'
-import { formActionDefault } from '@/utils/supabase.js'
+import { formActionDefault } from '@/utils/api'
 import { useAuthUserStore } from '@/stores/authUser'
 import { useDisplay } from 'vuetify'
 import { ref, watch } from 'vue'
@@ -22,9 +22,10 @@ const formDataDefault = {
   due_date: '',
   due_time: '',
   image: null,
-  user_id: authStore.userData?.id,
   checklist: [],
 }
+
+
 
 const formData = ref({ ...formDataDefault })
 const formAction = ref({ ...formActionDefault })
@@ -78,10 +79,6 @@ const onSubmit = async () => {
   formAction.value = { ...formActionDefault, formProcess: true }
 
   try {
-    // make sure user_id is set for new assignments
-    if (!isUpdate.value && !formData.value.user_id) {
-      formData.value.user_id = authStore.userData?.id || null
-    }
 
     const result = isUpdate.value
       ? await assignmentsStore.updateAssignments(formData.value)

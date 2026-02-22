@@ -2,7 +2,7 @@
 import { useDisplay } from 'vuetify'
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { supabase } from '@/utils/supabase'
+import { api } from '@/utils/api'
 import { useAuthUserStore } from '@/stores/authUser'
 
 const props = defineProps(['isDrawerVisible'])
@@ -23,7 +23,7 @@ watch(
 // LOGOUT HANDLER
 const handleLogout = async () => {
   try {
-    await supabase.auth.signOut()
+    await api.auth.signOut()
     authStore.$reset()
     router.push('/')              
   } catch (err) {

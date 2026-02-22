@@ -1,6 +1,14 @@
-import { supabase } from '@/utils/supabase'
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
+import axios from 'axios'
+
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api'
+
+// Configure axios to send cookies with every request (for Laravel session)
+const apiClient = axios.create({
+  baseURL: API_BASE,
+  withCredentials: true, // CRITICAL: Send cookies with every auth request
+})
 
 export const useAuthUserStore = defineStore('authUser', () => {
   // States
@@ -37,123 +45,180 @@ export const useAuthUserStore = defineStore('authUser', () => {
   }
 
   // Actions
-  async function isAuthenticated() {
-    const { data, error } = await supabase.auth.getSession()
 
-    if (error) {
-      console.error('Error getting session:', error.message)
+  /**
+   * Check if user is authenticated by calling Laravel session endpoint
+   * Laravel checks the session cookie and returns user data if valid
+   */
+  async function isAuthenticated() {
+    try {
+      const response = await apiClient.get('/auth/user')
+      const user = response.data?.data || response.data
+
+      if (user && user.id) {
+        userData.value = {
+          id: user.id,
+          email: user.email || '',
+          firstname: user.firstname || user.first_name || '',
+          lastname: user.lastname || user.last_name || '',
+          user_role: user.user_role || 'User',
+          branch: user.branch || '',
+          image_url: user.image_url || '',
+        }
+        return true
+      }
+      return false
+    } catch (error) {
+      console.error('Error checking authentication:', error.message)
       return false
     }
-
-    if (data.session) {
-      const { id, email, user_metadata } = data.session.user
-      userData.value = {
-        id,
-        email,
-        firstname: user_metadata?.firstname || '',
-        lastname: user_metadata?.lastname || '',
-        user_role: user_metadata?.user_role || 'User',
-        branch: user_metadata?.branch || '',
-        image_url: user_metadata?.image_url || '',
-      }
-    }
-
-    return !!data.session
   }
 
+  /**
+   * Get user information from Laravel session
+   */
   async function getUserInformation() {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    try {
+      const response = await apiClient.get('/auth/user')
+      const user = response.data?.data || response.data
 
-    if (user) {
-      const { id, email, user_metadata } = user
-      userData.value = {
-        id,
-        email,
-        firstname: user_metadata?.firstname || '',
-        lastname: user_metadata?.lastname || '',
-        user_role: user_metadata?.user_role || 'User',
-        branch: user_metadata?.branch || '',
-        image_url: user_metadata?.image_url || '',
+      if (user && user.id) {
+        userData.value = {
+          id: user.id,
+          email: user.email || '',
+          firstname: user.firstname || user.first_name || '',
+          lastname: user.lastname || user.last_name || '',
+          user_role: user.user_role || 'User',
+          branch: user.branch || '',
+          image_url: user.image_url || '',
+        }
       }
+    } catch (error) {
+      console.error('Error getting user information:', error.message)
     }
   }
 
-  async function getAuthPages(name) {
-    const { data } = await supabase
-      .from('user_roles')
-      .select('*, pages: user_role_pages (page)')
-      .eq('user_role', name)
+  /**
+   * Update user information via Laravel REST endpoint
+   */
+  async function updateUserInformation(updatedData) {
+    try {
+      const response = await apiClient.post('/auth/update', updatedData)
+      const user = response.data?.data || response.data
 
-    authPages.value = data?.[0]?.pages?.map((p) => p.page) || []
+      if (user && user.id) {
+        userData.value = {
+          id: user.id,
+          email: user.email || '',
+          firstname: user.firstname || user.first_name || '',
+          lastname: user.lastname || user.last_name || '',
+          user_role: user.user_role || 'User',
+          branch: user.branch || '',
+          image_url: user.image_url || '',
+        }
+        return { data: userData.value }
+      }
+    } catch (error) {
+      console.error('Error updating user information:', error.message)
+      return { error }
+    }
+  }
+
+  /**
+   * Update user avatar image
+   */
+  async function updateUserImage(file) {
+    if (!file) return { error: 'No file provided' }
+
+    try {
+      // Upload image to storage endpoint
+      const fd = new FormData()
+      fd.append('file', file)
+
+      const uploadResponse = await apiClient.post('/storage/edutrail/upload', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+
+      const publicUrl = uploadResponse.data?.publicUrl || uploadResponse.data?.data?.publicUrl
+
+      // Update user with new image URL
+      if (publicUrl) {
+        return await updateUserInformation({
+          ...userData.value,
+          image_url: publicUrl,
+        })
+      }
+    } catch (error) {
+      console.error('Error updating user image:', error.message)
+      return { error }
+    }
+  }
+
+  /**
+   * Login user with email/password
+   */
+  async function login(email, password) {
+    try {
+      const response = await apiClient.post('/auth/sign-in', { email, password })
+      const user = response.data?.data || response.data
+
+      if (user && user.id) {
+        userData.value = {
+          id: user.id,
+          email: user.email || '',
+          firstname: user.firstname || user.first_name || '',
+          lastname: user.lastname || user.last_name || '',
+          user_role: user.user_role || 'User',
+          branch: user.branch || '',
+          image_url: user.image_url || '',
+        }
+        return { success: true, data: user }
+      }
+    } catch (error) {
+      console.error('Error logging in:', error.message)
+      return { error: error.message }
+    }
+  }
+
+  /**
+   * Register new user
+   */
+  async function register(email, password, firstname = '', lastname = '') {
+    try {
+      const response = await apiClient.post('/auth/sign-up', {
+        email,
+        password,
+        firstname,
+        lastname,
+      })
+      return { success: true, data: response.data }
+    } catch (error) {
+      console.error('Error registering:', error.message)
+      return { error: error.message }
+    }
+  }
+
+  /**
+   * Logout user
+   */
+  async function logout() {
+    try {
+      await apiClient.post('/auth/sign-out')
+      $reset()
+      return { success: true }
+    } catch (error) {
+      console.error('Error logging out:', error.message)
+      return { error: error.message }
+    }
+  }
+
+  // Stub methods for compatibility (not needed for Laravel backend)
+  async function getAuthPages(name) {
+    authPages.value = []
   }
 
   async function getAuthBranchIds() {
-    if (!userData.value.branch) {
-      authBranchIds.value = []
-      return
-    }
-
-    const { data } = await supabase
-      .from('branches')
-      .select('id')
-      .in('name', userData.value.branch.split(','))
-
-    authBranchIds.value = data?.map((b) => b.id) || []
-  }
-
-  async function updateUserInformation(updatedData) {
-    const { data, error } = await supabase.auth.updateUser({
-      data: { ...updatedData },
-    })
-
-    if (error) {
-      return { error }
-    }
-
-    if (data.user) {
-      const { id, email, user_metadata } = data.user
-      userData.value = {
-        id,
-        email,
-        firstname: user_metadata?.firstname || '',
-        lastname: user_metadata?.lastname || '',
-        user_role: user_metadata?.user_role || 'User',
-        branch: user_metadata?.branch || '',
-        image_url: user_metadata?.image_url || '',
-      }
-
-      return { data: userData.value }
-    }
-  }
-
-  async function updateUserImage(file) {
-    const { data, error } = await supabase.storage
-      .from('edutrail')
-      .upload('avatars/' + userData.value.id + '-avatar.png', file, {
-        cacheControl: '3600',
-        upsert: true,
-      })
-
-    if (error) {
-      return { error }
-    }
-
-    if (data) {
-      const { data: imageData, error: imageError } = supabase.storage
-        .from('edutrail')
-        .getPublicUrl(data.path)
-
-      if (imageError) {
-        return { error: imageError }
-      }
-
-      return await updateUserInformation({
-        ...userData.value,
-        image_url: imageData.publicUrl,
-      })
-    }
+    authBranchIds.value = []
   }
 
   return {
@@ -168,5 +233,8 @@ export const useAuthUserStore = defineStore('authUser', () => {
     getAuthBranchIds,
     updateUserInformation,
     updateUserImage,
+    login,
+    register,
+    logout,
   }
 })

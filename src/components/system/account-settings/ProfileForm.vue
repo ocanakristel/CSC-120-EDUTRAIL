@@ -1,7 +1,7 @@
 <script setup>
 import { integerValidator, requiredValidator } from '@/utils/validators'
 import AlertNotification from '@/components/common/AlertNotification.vue'
-import { formActionDefault } from '@/utils/supabase.js'
+import { formActionDefault } from '@/utils/api'
 import { useAuthUserStore } from '@/stores/authUser'
 import { ref } from 'vue'
 
