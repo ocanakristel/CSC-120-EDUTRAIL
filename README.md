@@ -1,36 +1,23 @@
-# edutrail
+# EduTrail (CSC 120 Project)
 
-This template should help get you started developing with Vue 3 in Vite.
+EduTrail is an academic buddy web app that helps organize tasks, assignments, and projects.
 
-## Recommended IDE Setup
+## Project Structure
+- `edutrail/` – Frontend (Vue + Vite + Vuetify)
+- `edutrail-backend/` – Backend (Laravel API)
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+## Requirements
+- Node.js (for frontend)
+- PHP + Composer (for backend)
+- MySQL (database)
 
-## Customize configuration
+## Setup
 
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
-npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
-npm run dev
-```
-
-### Compile and Minify for Production
-
-```sh
-npm run build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-```
-"# CSC-120-EDUTRAIL" 
+### Backend (Laravel)
+```bash
+cd edutrail-backend
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+php artisan serve

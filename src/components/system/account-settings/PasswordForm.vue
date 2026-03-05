@@ -98,3 +98,10 @@ const onFormSubmit = () => {
     </v-btn>
   </v-form>
 </template>
+
+<style scoped>
+.v-form{padding:0;margin:0}
+.v-row{margin:0}
+.v-col{padding:4px}
+.v-text-field .v-input__control{min-height:40px}
+</style>

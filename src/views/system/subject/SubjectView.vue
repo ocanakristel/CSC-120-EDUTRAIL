@@ -21,7 +21,7 @@ const isDrawerVisible = ref(true)
         <v-card>
           <v-row>
             <v-col cols="12" class="pa-5 pt-10">
-              <v-card title="Here are the lists of available SUBJECTS:" variant="tonal"></v-card>
+              <v-card title="SUBJECTS LIST:" variant="tonal"></v-card>
             </v-col>
             <SubjectList></SubjectList>
           </v-row>

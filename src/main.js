@@ -58,3 +58,48 @@ async function bootstrap() {
 }
 
 bootstrap()
+
+// --- Suppress noisy extension runtime.lastError console spam ---
+// Some browser extensions log: "A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received"
+// This originates from extensions and not from app code; to avoid distracting red errors during development,
+// filter those specific messages from console.error/warn while still preserving other errors.
+try {
+  const originalConsoleError = console.error.bind(console)
+  const originalConsoleWarn = console.warn.bind(console)
+
+  const filterText = 'A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received'
+
+  console.error = (...args) => {
+    try {
+      if (args && args.length && String(args[0]).includes(filterText)) return
+    } catch (e) {
+      // fallthrough
+    }
+    originalConsoleError(...args)
+  }
+
+  console.warn = (...args) => {
+    try {
+      if (args && args.length && String(args[0]).includes(filterText)) return
+    } catch (e) {
+      // fallthrough
+    }
+    originalConsoleWarn(...args)
+  }
+
+  // Catch unhandled promise rejections and optionally suppress the noisy runtime.lastError message
+  window.addEventListener('unhandledrejection', (ev) => {
+    try {
+      const reason = ev?.reason
+      if (String(reason).includes(filterText)) {
+        ev.preventDefault()
+        return
+      }
+    } catch (e) {
+      // ignore
+    }
+    // leave other rejections to default handling
+  })
+} catch (e) {
+  // If anything fails, don't block app startup
+}

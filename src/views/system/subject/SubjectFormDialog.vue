@@ -67,15 +67,27 @@ const onPreviewReset = () => {
 }
 
 const onSubmit = async () => {
+  // Debug: mark we started submit
+  // eslint-disable-next-line no-console
+  console.debug('SubjectFormDialog: onSubmit called', JSON.parse(JSON.stringify(formData.value)))
+
   formAction.value = { ...formActionDefault, formProcess: true }
+  
+  // Set timeout for the form submission (8 seconds)
+  const timeoutId = setTimeout(() => {
+    formAction.value.formErrorMessage = 'Request timeout. Please try again.'
+    formAction.value.formProcess = false
+  }, 8000)
 
   try {
     const { data, error } = isUpdate.value
       ? await subjectsStore.updateSubject(formData.value)
       : await subjectsStore.addSubject(formData.value)
 
+    clearTimeout(timeoutId)
+
     if (error) {
-      formAction.value.formErrorMessage = error.message
+      formAction.value.formErrorMessage = error.message || 'Operation failed'
       formAction.value.formStatus = error.status
     } else if (data) {
       // 📝 log subject created/updated
@@ -87,23 +99,68 @@ const onSubmit = async () => {
         ? 'Successfully Updated Subject Information.'
         : 'Successfully Added Subject.'
 
-      await subjectsStore.getSubjects(props.tableFilters)
+      // Refresh subject list in parent table
+      try {
+        await subjectsStore.getSubjects(props.tableFilters)
+      } catch (e) {
+        console.error('Failed to refresh subjects after add/update:', e)
+      }
 
       setTimeout(() => {
         onFormReset()
       }, 2500)
     }
   } catch (err) {
+    clearTimeout(timeoutId)
     formAction.value.formErrorMessage = err.message || 'An error occurred.'
+    console.error('Subject form error:', err)
   } finally {
     formAction.value.formProcess = false
   }
 }
 
-const onFormSubmit = () => {
-  refVForm.value?.validate().then(({ valid }) => {
-    if (valid) onSubmit()
-  })
+const onFormSubmit = async () => {
+  // Debug: log validate invocation
+  // eslint-disable-next-line no-console
+  console.debug('SubjectFormDialog: onFormSubmit - validating form')
+
+  try {
+    // If the v-form ref is missing or validate is not a function, log and proceed to submit for debugging
+    if (!refVForm.value) {
+      // eslint-disable-next-line no-console
+      console.warn('SubjectFormDialog: refVForm is undefined. Proceeding to submit for debug.')
+      await onSubmit()
+      return
+    }
+
+    if (typeof refVForm.value.validate !== 'function') {
+      // eslint-disable-next-line no-console
+      console.warn('SubjectFormDialog: refVForm.validate is not a function. Proceeding to submit for debug.', refVForm.value)
+      await onSubmit()
+      return
+    }
+
+    const res = await refVForm.value?.validate()
+
+    // Vuetify validate may return boolean or an object { valid }
+    let valid = false
+    if (typeof res === 'boolean') valid = res
+    else if (res && typeof res === 'object' && 'valid' in res) valid = res.valid
+
+    // Debug: log validation result
+    // eslint-disable-next-line no-console
+    console.debug('SubjectFormDialog: validation result', res, 'interpreted valid=', valid)
+
+    if (valid) await onSubmit()
+    else {
+      // eslint-disable-next-line no-console
+      console.warn('SubjectFormDialog: validation failed, not submitting')
+    }
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('SubjectFormDialog: validate() threw an error', err)
+    // attempt to still submit to help debugging (only if user confirms)
+  }
 }
 
 const onFormReset = () => {

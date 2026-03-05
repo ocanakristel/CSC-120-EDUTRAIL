@@ -34,18 +34,32 @@ const onLogOut = async () => {
 
 // Getting user information functionality
 const getUser = async () => {
-  const {
-    data: {
-      user: { user_metadata: metadata },
-    },
-  } = await api.auth.getUser()
+  try {
+    const resp = await api.auth.getUser()
+    if (resp?.error) {
+      console.warn('getUser returned error:', resp.error)
+      return
+    }
 
-  userData.value.email = metadata.email
-  userData.value.fullname = `${metadata.firstname} ${metadata.lastname}`
-  userData.value.initials = getAvatarText(userData.value.fullname)
+    // backend may return user object in different shapes, handle multiple cases
+    const userObj = resp.data?.user || resp.data?.data?.user || resp.data || null
+    const metadata = userObj?.user_metadata || userObj?.metadata || (typeof userObj === 'object' ? userObj : null)
 
-  // 👇 make sure this matches the key you use in metadata
-  userData.value.avatarUrl = metadata.avatar_url || '' 
+    if (!metadata || typeof metadata !== 'object') {
+      // Nothing useful to show
+      return
+    }
+
+    // Use optional chaining to avoid any runtime errors
+    userData.value.email = metadata?.email || metadata?.email_address || ''
+    const first = metadata?.firstname || metadata?.first_name || ''
+    const last = metadata?.lastname || metadata?.last_name || ''
+    userData.value.fullname = `${first} ${last}`.trim()
+    userData.value.initials = getAvatarText(userData.value.fullname || metadata?.email || '')
+    userData.value.avatarUrl = metadata?.avatar_url || metadata?.avatarUrl || metadata?.avatar || ''
+  } catch (e) {
+    console.error('Failed to get user:', e)
+  }
 }
 
 // Load functions during rendering

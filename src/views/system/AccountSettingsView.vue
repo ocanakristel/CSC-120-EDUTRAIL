@@ -17,18 +17,6 @@ const authStore = useAuthUserStore()
 // Reactive states
 const isDrawerVisible = ref(!mobile.value)
 
-// User Information
-const userData = computed(() => authStore.userData)
-const userRole = computed(() => authStore.userRole)
-
-// Computed full name (safe even if data not loaded yet)
-const fullName = computed(() => {
-  const first = userData.value?.firstname || ''
-  const last = userData.value?.lastname || ''
-  const name = `${first} ${last}`.trim()
-  return name
-})
-
 // Retrieve user information on mount
 onMounted(() => {
   authStore.isAuthenticated()
@@ -48,65 +36,29 @@ onMounted(() => {
 
     <!-- Main Content -->
     <template #content>
-      <v-container>
+      <v-container class="py-2">
         <!-- Header Card -->
-        <v-card class="mb-5">
+        <v-card class="mb-1">
           <template #title>
-            <span class="text-h6 font-weight-bold">
-              <v-breadcrumbs :items="['Account', 'Settings']">
-                <template #prepend>
-                  <v-icon icon="mdi-wrench" size="small" class="me-1" />
-                </template>
-              </v-breadcrumbs>
-            </span>
-          </template>
-          <template #subtitle>
-            <p class="ms-4 text-wrap">
-              Edit profile information, update profile picture, and change your password.
-            </p>
+            <div style="display:flex; align-items:center; justify-content:flex-start">
+              <div>
+                <span class="text-h6 font-weight-bold">
+                  <v-breadcrumbs :items="['Account', 'Settings']">
+                    <template #prepend>
+                      <v-icon icon="mdi-wrench" size="small" class="me-1" />
+                    </template>
+                  </v-breadcrumbs>
+                </span>
+              </div>
+            </div>
           </template>
         </v-card>
 
-        <v-row>
-          <!-- User Profile Card -->
-          <v-col cols="12" lg="4">
-            <v-card>
-              <v-card-text>
-                <v-img
-                  width="50%"
-                  class="mx-auto rounded-circle"
-                  color="red-darken-4"
-                  aspect-ratio="1"
-                  :src="userData.image_url || '/images/logo-icon.jpg'"
-                  alt="Profile Picture"
-                  cover
-                />
-
-                <!-- 👇 This line now shows the user's name instead of just 'User' -->
-                <h3 class="d-flex align-center justify-center mt-5">
-                  <v-icon class="me-2" icon="mdi-account-badge" />
-                  {{ fullName || userRole || 'User' }}
-                </h3>
-
-                <v-divider class="my-5" />
-
-                <div class="text-center">
-                  <h4 class="my-2">
-                    <b>Full Name:</b>
-                    {{ fullName || '—' }}
-                  </h4>
-                  <h4 class="my-2">
-                    <b>Email:</b> {{ userData.email }}
-                  </h4>
-                </div>
-              </v-card-text>
-            </v-card>
-          </v-col>
-
-          <!-- Forms Section -->
-          <v-col cols="12" lg="8">
+        <v-row class="align-start">
+          <!-- Forms Section (full width) -->
+          <v-col cols="12">
             <!-- Profile Information Form -->
-            <v-card class="mb-5">
+            <v-card class="mb-1 account-card">
               <template #title> Profile Information </template>
               <v-card-text>
                 <ProfileForm />
@@ -114,7 +66,7 @@ onMounted(() => {
             </v-card>
 
             <!-- Change Password Form -->
-            <v-card class="mb-5">
+            <v-card class="mb-1 account-card">
               <template #title> Change Password </template>
               <v-card-text>
                 <PasswordForm />
@@ -126,3 +78,23 @@ onMounted(() => {
     </template>
   </AppLayout>
 </template>
+
+<style scoped>
+.account-card .v-card-text{padding:12px}
+.account-card .v-card__title{padding:8px 12px}
+.profile-email{margin-top:6px}
+
+/* Centered profile avatar styles */
+
+.profile-center-wrap{align-items:center}
+.profile-card{background:#fff;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,0.08)}
+.profile-card .v-card-text{padding:18px}
+.avatar-wrap .picture-preview-wrap.compact{width:160px;height:160px;border-radius:50%;overflow:hidden;border:none;box-shadow:0 12px 30px rgba(0,0,0,0.12)}
+.avatar-wrap .avatar-add-btn{position:absolute;right:-12px;bottom:-12px;background:#2196f3;color:#fff;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 12px rgba(0,0,0,0.14);z-index:10}
+.profile-center-wrap .text-h5{margin-top:6px}
+.profile-email{color:#6b6b6b}
+
+/* allow the plus button to overflow the circular avatar */
+.avatar-wrap{position:relative;overflow:visible}
+
+</style>

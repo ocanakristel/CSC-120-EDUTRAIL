@@ -17,6 +17,10 @@ export const useAuthUserStore = defineStore('authUser', () => {
     email: '',
     firstname: '',
     lastname: '',
+    nickname: '',
+    gender: '',
+    contact_number: '',
+    contact: '',
     user_role: '',
     branch: '',
     image_url: '',
@@ -36,6 +40,10 @@ export const useAuthUserStore = defineStore('authUser', () => {
       email: '',
       firstname: '',
       lastname: '',
+      nickname: '',
+      gender: '',
+      contact_number: '',
+      contact: '',
       user_role: '',
       branch: '',
       image_url: '',
@@ -61,6 +69,10 @@ export const useAuthUserStore = defineStore('authUser', () => {
           email: user.email || '',
           firstname: user.firstname || user.first_name || '',
           lastname: user.lastname || user.last_name || '',
+          nickname: user.nickname || '',
+          gender: user.gender || '',
+          contact_number: user.contact_number || '',
+          contact: user.contact || '',
           user_role: user.user_role || 'User',
           branch: user.branch || '',
           image_url: user.image_url || '',
@@ -88,6 +100,10 @@ export const useAuthUserStore = defineStore('authUser', () => {
           email: user.email || '',
           firstname: user.firstname || user.first_name || '',
           lastname: user.lastname || user.last_name || '',
+          nickname: user.nickname || '',
+          gender: user.gender || '',
+          contact_number: user.contact_number || '',
+          contact: user.contact || '',
           user_role: user.user_role || 'User',
           branch: user.branch || '',
           image_url: user.image_url || '',
@@ -112,6 +128,10 @@ export const useAuthUserStore = defineStore('authUser', () => {
           email: user.email || '',
           firstname: user.firstname || user.first_name || '',
           lastname: user.lastname || user.last_name || '',
+          nickname: user.nickname || '',
+          gender: user.gender || '',
+          contact_number: user.contact_number || '',
+          contact: user.contact || '',
           user_role: user.user_role || 'User',
           branch: user.branch || '',
           image_url: user.image_url || '',
@@ -119,8 +139,10 @@ export const useAuthUserStore = defineStore('authUser', () => {
         return { data: userData.value }
       }
     } catch (error) {
-      console.error('Error updating user information:', error.message)
-      return { error }
+      // capture server-provided error details when available
+      const serverError = error.response?.data?.error || error.response?.data || { message: error.message }
+      console.error('Error updating user information:', serverError)
+      return { error: serverError }
     }
   }
 
@@ -128,7 +150,7 @@ export const useAuthUserStore = defineStore('authUser', () => {
    * Update user avatar image
    */
   async function updateUserImage(file) {
-    if (!file) return { error: 'No file provided' }
+    if (!file) return { error: { message: 'No file provided' } }
 
     try {
       // Upload image to storage endpoint
@@ -139,18 +161,42 @@ export const useAuthUserStore = defineStore('authUser', () => {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
 
+      // Debug: log upload response
+      try {
+        // eslint-disable-next-line no-console
+        console.debug('authStore: upload response', uploadResponse?.data)
+      } catch (e) {}
+
       const publicUrl = uploadResponse.data?.publicUrl || uploadResponse.data?.data?.publicUrl
 
-      // Update user with new image URL
-      if (publicUrl) {
-        return await updateUserInformation({
-          ...userData.value,
-          image_url: publicUrl,
-        })
+      // If no publicUrl returned but upload succeeded, construct one or use path
+      let imageUrl = publicUrl
+      if (!imageUrl && uploadResponse.data?.path) {
+        // If backend returns a path, construct full URL
+        imageUrl = `${API_BASE.replace('/api', '')}/storage/${uploadResponse.data.path}`
       }
+      if (!imageUrl && uploadResponse.data?.data?.path) {
+        imageUrl = `${API_BASE.replace('/api', '')}/storage/${uploadResponse.data.data.path}`
+      }
+
+      // Update user with new image URL
+      if (imageUrl) {
+        const result = await updateUserInformation({
+          ...userData.value,
+          image_url: imageUrl,
+        })
+
+        // Refresh user info from server to ensure sync
+        await getUserInformation()
+
+        return result
+      }
+
+      // If we can't find an image URL, return error
+      return { error: { message: 'Image uploaded but no URL returned from server' } }
     } catch (error) {
       console.error('Error updating user image:', error.message)
-      return { error }
+      return { error: { message: error.message || 'Failed to upload image' } }
     }
   }
 
@@ -168,6 +214,10 @@ export const useAuthUserStore = defineStore('authUser', () => {
           email: user.email || '',
           firstname: user.firstname || user.first_name || '',
           lastname: user.lastname || user.last_name || '',
+          nickname: user.nickname || '',
+          gender: user.gender || '',
+          contact_number: user.contact_number || '',
+          contact: user.contact || '',
           user_role: user.user_role || 'User',
           branch: user.branch || '',
           image_url: user.image_url || '',

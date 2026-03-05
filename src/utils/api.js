@@ -109,6 +109,12 @@ class QueryBuilder {
     return this._exec()
   }
 
+  // Make QueryBuilder thenable so it can be awaited directly (insert/update/delete)
+  then(resolve, reject) {
+    // Execute pending operation (or GET) and resolve the promise
+    return this._exec().then(resolve, reject)
+  }
+
   insert(payload) {
     // ✅ make it chainable: api.from('x').insert(data).select()
     this.pendingMethod = 'insert'
